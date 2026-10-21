@@ -19,7 +19,7 @@ export type MovementType =
 export type PaymentMethod = "cash" | "bkash" | "nagad" | "card" | "due";
 export type SyncOp = "INSERT" | "UPDATE" | "DELETE";
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       tenants: {
@@ -56,6 +56,7 @@ export interface Database {
           deleted_at?: string | null;
           version?: number;
         };
+        Relationships: [];
       };
       profiles: {
         Row: {
@@ -91,6 +92,7 @@ export interface Database {
           deleted_at?: string | null;
           version?: number;
         };
+        Relationships: [];
       };
       tenant_members: {
         Row: {
@@ -129,6 +131,78 @@ export interface Database {
           deleted_at?: string | null;
           version?: number;
         };
+        Relationships: [
+          {
+            foreignKeyName: "tenant_members_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tenant_members_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      tenant_invitations: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          email: string;
+          role: UserRole;
+          token: string;
+          invited_by: string | null;
+          expires_at: string;
+          accepted_at: string | null;
+          created_at: string;
+          updated_at: string;
+          created_by: string | null;
+          deleted_at: string | null;
+          version: number;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          email: string;
+          role?: UserRole;
+          token: string;
+          invited_by?: string | null;
+          expires_at?: string;
+          accepted_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          created_by?: string | null;
+          deleted_at?: string | null;
+          version?: number;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          email?: string;
+          role?: UserRole;
+          token?: string;
+          invited_by?: string | null;
+          expires_at?: string;
+          accepted_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          created_by?: string | null;
+          deleted_at?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tenant_invitations_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       subscriptions: {
         Row: {
@@ -179,6 +253,7 @@ export interface Database {
           deleted_at?: string | null;
           version?: number;
         };
+        Relationships: [];
       };
       stores: {
         Row: {
@@ -223,6 +298,7 @@ export interface Database {
           deleted_at?: string | null;
           version?: number;
         };
+        Relationships: [];
       };
       stock_locations: {
         Row: {
@@ -261,6 +337,7 @@ export interface Database {
           deleted_at?: string | null;
           version?: number;
         };
+        Relationships: [];
       };
       categories: {
         Row: {
@@ -299,6 +376,7 @@ export interface Database {
           deleted_at?: string | null;
           version?: number;
         };
+        Relationships: [];
       };
       brands: {
         Row: {
@@ -331,6 +409,7 @@ export interface Database {
           deleted_at?: string | null;
           version?: number;
         };
+        Relationships: [];
       };
       products: {
         Row: {
@@ -384,6 +463,7 @@ export interface Database {
           deleted_at?: string | null;
           version?: number;
         };
+        Relationships: [];
       };
       product_variants: {
         Row: {
@@ -393,7 +473,7 @@ export interface Database {
           name: string;
           sku: string;
           barcode: string | null;
-          cost_price: number; // Stored as integer poisha
+          cost_price: number;
           retail_price: number;
           wholesale_price: number;
           tax_rate: number;
@@ -440,6 +520,15 @@ export interface Database {
           deleted_at?: string | null;
           version?: number;
         };
+        Relationships: [
+          {
+            foreignKeyName: "product_variants_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       product_serials: {
         Row: {
@@ -481,6 +570,7 @@ export interface Database {
           deleted_at?: string | null;
           version?: number;
         };
+        Relationships: [];
       };
       customers: {
         Row: {
@@ -528,6 +618,7 @@ export interface Database {
           deleted_at?: string | null;
           version?: number;
         };
+        Relationships: [];
       };
       suppliers: {
         Row: {
@@ -572,6 +663,7 @@ export interface Database {
           deleted_at?: string | null;
           version?: number;
         };
+        Relationships: [];
       };
       purchases: {
         Row: {
@@ -622,6 +714,7 @@ export interface Database {
           deleted_at?: string | null;
           version?: number;
         };
+        Relationships: [];
       };
       purchase_items: {
         Row: {
@@ -666,6 +759,7 @@ export interface Database {
           deleted_at?: string | null;
           version?: number;
         };
+        Relationships: [];
       };
       sales: {
         Row: {
@@ -734,6 +828,7 @@ export interface Database {
           deleted_at?: string | null;
           version?: number;
         };
+        Relationships: [];
       };
       sale_items: {
         Row: {
@@ -790,6 +885,7 @@ export interface Database {
           deleted_at?: string | null;
           version?: number;
         };
+        Relationships: [];
       };
       sale_payments: {
         Row: {
@@ -834,6 +930,7 @@ export interface Database {
           deleted_at?: string | null;
           version?: number;
         };
+        Relationships: [];
       };
       returns: {
         Row: {
@@ -881,6 +978,7 @@ export interface Database {
           deleted_at?: string | null;
           version?: number;
         };
+        Relationships: [];
       };
       stock_movements: {
         Row: {
@@ -934,6 +1032,7 @@ export interface Database {
           deleted_at?: string | null;
           version?: number;
         };
+        Relationships: [];
       };
       expenses: {
         Row: {
@@ -981,6 +1080,7 @@ export interface Database {
           deleted_at?: string | null;
           version?: number;
         };
+        Relationships: [];
       };
       audit_logs: {
         Row: {
@@ -1022,6 +1122,7 @@ export interface Database {
           user_agent?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
       sync_changes: {
         Row: {
@@ -1051,6 +1152,7 @@ export interface Database {
           record_version?: number;
           updated_at?: string;
         };
+        Relationships: [];
       };
       idempotency_keys: {
         Row: {
@@ -1080,6 +1182,7 @@ export interface Database {
           response_payload?: Json | null;
           created_at?: string;
         };
+        Relationships: [];
       };
     };
     Views: {
@@ -1109,6 +1212,7 @@ export interface Database {
           last_movement_at: string | null;
           is_low_stock: boolean;
         };
+        Relationships: [];
       };
     };
     Functions: {
@@ -1129,6 +1233,75 @@ export interface Database {
         };
         Returns: boolean;
       };
+      is_tenant_member: {
+        Args: {
+          p_tenant_id: string;
+        };
+        Returns: boolean;
+      };
+      has_role: {
+        Args: {
+          p_tenant_id: string;
+          p_roles: UserRole[];
+        };
+        Returns: boolean;
+      };
+      get_user_tenant_role: {
+        Args: {
+          p_tenant_id: string;
+        };
+        Returns: UserRole | null;
+      };
+      fn_create_tenant_onboarding: {
+        Args: {
+          p_tenant_name: string;
+          p_slug: string;
+          p_store_name: string;
+          p_store_code: string;
+          p_currency?: string;
+          p_timezone?: string;
+        };
+        Returns: Json;
+      };
+      fn_invite_staff: {
+        Args: {
+          p_tenant_id: string;
+          p_email: string;
+          p_role: UserRole;
+        };
+        Returns: Json;
+      };
+      fn_accept_invitation: {
+        Args: {
+          p_token: string;
+        };
+        Returns: Json;
+      };
+      fn_update_member_role: {
+        Args: {
+          p_tenant_id: string;
+          p_member_id: string;
+          p_new_role: UserRole;
+        };
+        Returns: boolean;
+      };
+      fn_revoke_invitation: {
+        Args: {
+          p_invitation_id: string;
+        };
+        Returns: boolean;
+      };
+    };
+    Enums: {
+      user_role: UserRole;
+      plan_tier: PlanTier;
+      serial_status: SerialStatus;
+      movement_type: MovementType;
+      payment_method: PaymentMethod;
+      sync_op: SyncOp;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
     };
   };
-}
+};

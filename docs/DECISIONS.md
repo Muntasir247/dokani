@@ -75,3 +75,33 @@ This document tracks major architectural decisions for **Dokani**, capturing the
 * **Alternatives Rejected**:
   - *Full table dumps on every sync*: Bandwidth-heavy, drains mobile data, fails on 3G/slow connections.
   - *Distributed transactions (2PC)*: Impossible in offline or disconnected states.
+
+---
+
+## ADR 006: Row Level Security (RLS) Strategy & Immutability Guarantees
+* **Status**: Accepted
+* **Date**: 2026-10-22
+* **Context**: We need non-negotiable multi-tenant isolation across all 24 database tables, role-based restrictions (owner, manager, cashier), and guarantee that ledger movements and audit logs can never be manipulated or deleted.
+* **Decision**: Enable RLS on every table using `SECURITY DEFINER` helper functions (`is_tenant_member(tenant_id)` and `has_role(tenant_id, roles[])`). Omit `UPDATE` and `DELETE` policies on `stock_movements` and `audit_logs` to enforce strict append-only immutability.
+* **Why**:
+  - Eliminates reliance on client-side filtering; Postgres automatically filters every query by active tenant membership.
+  - Cashiers are restricted at the database policy level from viewing expenses, supplier costs, or deleting sales.
+  - Immutability of ledger and audit records ensures mathematical and financial integrity.
+* **Alternatives Rejected**:
+  - *Application-level where clauses only*: Extremely error-prone; a single missing `.eq('tenant_id', id)` in an endpoint creates critical cross-tenant data leaks.
+  - *Triggers blocking updates on mutable tables*: Omitting `UPDATE`/`DELETE` policies directly under RLS is cleaner, more performant, and standard Postgres security practice.
+
+---
+
+## ADR 007: Atomic Tenant Onboarding & Staff Invitation Tokens
+* **Status**: Accepted
+* **Date**: 2026-10-22
+* **Context**: When a shop owner registers, creating a store requires provisioning a tenant, an initial outlet branch, default stock locations, an owner role, and a default Free subscription without partial failure states.
+* **Decision**: Implement `fn_create_tenant_onboarding` as a single atomic Postgres RPC transaction. Staff invitations use a dedicated `tenant_invitations` table with cryptographically secure random tokens and 7-day expiration.
+* **Why**:
+  - Guarantees complete atomicity: if any step fails (e.g., duplicate slug), the entire transaction rolls back.
+  - Token-based invitations allow shop owners to invite cashiers and managers before they even sign up. When invited staff register or log in, `fn_accept_invitation` links them to the store automatically.
+* **Alternatives Rejected**:
+  - *Multi-step HTTP requests from the client*: Vulnerable to network drops mid-setup, leaving orphaned tenants or users without store branches.
+  - *Magic link emails only*: Retail shops in Bangladesh often hire cashiers on the spot; owners need to generate an immediate token or invite link to onboard staff on the till instantly.
+
