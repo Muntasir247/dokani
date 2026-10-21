@@ -102,6 +102,24 @@ This document tracks major architectural decisions for **Dokani**, capturing the
   - Guarantees complete atomicity: if any step fails (e.g., duplicate slug), the entire transaction rolls back.
   - Token-based invitations allow shop owners to invite cashiers and managers before they even sign up. When invited staff register or log in, `fn_accept_invitation` links them to the store automatically.
 * **Alternatives Rejected**:
-  - *Multi-step HTTP requests from the client*: Vulnerable to network drops mid-setup, leaving orphaned tenants or users without store branches.
-  - *Magic link emails only*: Retail shops in Bangladesh often hire cashiers on the spot; owners need to generate an immediate token or invite link to onboard staff on the till instantly.
+---
+
+## ADR 008: Product Catalog, Stock Ledger Balances, Weighted-Average Cost (WAC), Serial Single-Sale Invariant, and Dry-Run CSV Validation
+* **Status**: Accepted
+* **Date**: 2026-10-22
+* **Context**: Dokani's catalog & inventory management requires multi-variant products, tenant-scoped unique SKUs, append-only inventory ledger balance derivation, weighted-average cost (AVCO/WAC) tracking in integer poisha, single-sale database guarantees for serial numbers, role-based cost price masking for cashiers, and safe bulk CSV imports with row-level error reporting.
+* **Decision**:
+  1. **Stock on Hand Derived from Movements Ledger**: Balances are calculated by aggregating append-only `stock_movements` (purchases, sales, adjustments, transfers, returns). All stock changes occur through atomic Postgres RPCs (`fn_receive_purchase`, `fn_adjust_stock`, `fn_stock_take`, `fn_transfer_stock`).
+  2. **Weighted-Average Cost (WAC)**: Updated on purchase receiving using integer poisha math: `new_wac = round((current_stock * current_wac + purchase_qty * purchase_unit_cost) / (current_stock + purchase_qty))`. When existing stock is zero or negative, the new purchase price resets the WAC. Inventory adjustments, cycle counts, and transfers preserve WAC.
+  3. **DB-Level Single-Sale Serial Invariant**: A PostgreSQL `BEFORE INSERT OR UPDATE` trigger (`trg_check_serial_sale_rules` on `product_serials`) verifies that `times_sold` cannot exceed 1 and forbids setting status to 'sold' if already sold. A serial can never be sold twice, preventing race conditions during offline sync or concurrent POS checkout.
+  4. **Two-Stage CSV Import with Dry-Run Validation**: Bulk CSV uploads run in `dryRun` mode first. Row and column validation parses numbers, checks SKU tenant uniqueness, and collects row-specific errors. The server imports zero rows if `errorCount > 0` or `dryRun = true`.
+  5. **Cashier Cost Masking**: Role enforcement at the API layer strips `cost_price` (returns `null`) for cashiers, ensuring privacy of supplier profit margins at the shop floor.
+* **Why**:
+  - Guarantees financial and physical inventory reconciliation: stock on hand is mathematically proven to equal ledger movements.
+  - Prevents high-value gadget/electronics fraud or double-selling under intermittent network connectivity.
+  - Zero floating-point rounding errors across inventory turnover.
+* **Alternatives Rejected**:
+  - *Mutable stock counter column on product_variants*: Prone to drift, phantom stock, and untraceable shrinkage.
+  - *Application-only serial uniqueness check*: Fails under race conditions or delayed offline-sync reconciliations.
+  - *Allowing partial CSV imports*: Incomplete imports leave messy half-configured catalogs with broken variant or category links.
 

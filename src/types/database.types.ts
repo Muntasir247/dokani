@@ -419,8 +419,10 @@ export type Database = {
           brand_id: string | null;
           name: string;
           description: string | null;
+          image_url: string | null;
           has_variants: boolean;
           has_serials: boolean;
+          warranty_months: number;
           unit: string;
           is_active: boolean;
           created_at: string;
@@ -436,8 +438,10 @@ export type Database = {
           brand_id?: string | null;
           name: string;
           description?: string | null;
+          image_url?: string | null;
           has_variants?: boolean;
           has_serials?: boolean;
+          warranty_months?: number;
           unit?: string;
           is_active?: boolean;
           created_at?: string;
@@ -453,8 +457,10 @@ export type Database = {
           brand_id?: string | null;
           name?: string;
           description?: string | null;
+          image_url?: string | null;
           has_variants?: boolean;
           has_serials?: boolean;
+          warranty_months?: number;
           unit?: string;
           is_active?: boolean;
           created_at?: string;
@@ -473,6 +479,8 @@ export type Database = {
           name: string;
           sku: string;
           barcode: string | null;
+          image_url: string | null;
+          options: Json;
           cost_price: number;
           retail_price: number;
           wholesale_price: number;
@@ -491,6 +499,8 @@ export type Database = {
           name?: string;
           sku: string;
           barcode?: string | null;
+          image_url?: string | null;
+          options?: Json;
           cost_price?: number;
           retail_price?: number;
           wholesale_price?: number;
@@ -509,6 +519,8 @@ export type Database = {
           name?: string;
           sku?: string;
           barcode?: string | null;
+          image_url?: string | null;
+          options?: Json;
           cost_price?: number;
           retail_price?: number;
           wholesale_price?: number;
@@ -538,6 +550,11 @@ export type Database = {
           stock_location_id: string;
           serial_number: string;
           status: SerialStatus;
+          warranty_months: number;
+          times_sold: number;
+          sold_at: string | null;
+          sale_id: string | null;
+          sale_item_id: string | null;
           created_at: string;
           updated_at: string;
           created_by: string | null;
@@ -551,6 +568,11 @@ export type Database = {
           stock_location_id: string;
           serial_number: string;
           status?: SerialStatus;
+          warranty_months?: number;
+          times_sold?: number;
+          sold_at?: string | null;
+          sale_id?: string | null;
+          sale_item_id?: string | null;
           created_at?: string;
           updated_at?: string;
           created_by?: string | null;
@@ -564,6 +586,11 @@ export type Database = {
           stock_location_id?: string;
           serial_number?: string;
           status?: SerialStatus;
+          warranty_months?: number;
+          times_sold?: number;
+          sold_at?: string | null;
+          sale_id?: string | null;
+          sale_item_id?: string | null;
           created_at?: string;
           updated_at?: string;
           created_by?: string | null;
@@ -629,6 +656,7 @@ export type Database = {
           phone: string | null;
           email: string | null;
           address: string | null;
+          opening_balance: number;
           created_at: string;
           updated_at: string;
           created_by: string | null;
@@ -643,6 +671,7 @@ export type Database = {
           phone?: string | null;
           email?: string | null;
           address?: string | null;
+          opening_balance?: number;
           created_at?: string;
           updated_at?: string;
           created_by?: string | null;
@@ -657,6 +686,7 @@ export type Database = {
           phone?: string | null;
           email?: string | null;
           address?: string | null;
+          opening_balance?: number;
           created_at?: string;
           updated_at?: string;
           created_by?: string | null;
@@ -1214,6 +1244,23 @@ export type Database = {
         };
         Relationships: [];
       };
+      view_supplier_balances: {
+        Row: {
+          supplier_id: string;
+          tenant_id: string;
+          name: string;
+          company: string | null;
+          phone: string | null;
+          email: string | null;
+          address: string | null;
+          opening_balance: number;
+          total_purchased: number;
+          total_paid: number;
+          current_due: number;
+          last_purchase_at: string | null;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
       fn_get_stock_quantity: {
@@ -1290,6 +1337,51 @@ export type Database = {
           p_invitation_id: string;
         };
         Returns: boolean;
+      };
+      fn_receive_purchase: {
+        Args: {
+          p_tenant_id: string;
+          p_store_id: string;
+          p_supplier_id: string;
+          p_invoice_number: string;
+          p_items: Json;
+          p_paid_amount?: number;
+          p_notes?: string;
+        };
+        Returns: Json;
+      };
+      fn_adjust_stock: {
+        Args: {
+          p_tenant_id: string;
+          p_location_id: string;
+          p_variant_id: string;
+          p_delta_quantity: number;
+          p_reason: string;
+          p_notes?: string;
+        };
+        Returns: Json;
+      };
+      fn_stock_take: {
+        Args: {
+          p_tenant_id: string;
+          p_location_id: string;
+          p_variant_id: string;
+          p_counted_quantity: number;
+          p_notes?: string;
+        };
+        Returns: Json;
+      };
+      fn_transfer_stock: {
+        Args: {
+          p_tenant_id: string;
+          p_from_location_id: string;
+          p_to_location_id: string;
+          p_variant_id: string;
+          p_quantity: number;
+          p_serials?: string[];
+          p_notes?: string;
+        };
+        Returns: Json;
       };
     };
     Enums: {

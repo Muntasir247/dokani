@@ -34,6 +34,8 @@ export function toTaka(poisha: number): number {
   return poisha / POISHA_PER_TAKA;
 }
 
+export const fromPoisha = toTaka;
+
 /**
  * Formats integer Poisha into a human-readable BDT currency string.
  * Example: formatBDT(165000) -> "৳1,650.00"

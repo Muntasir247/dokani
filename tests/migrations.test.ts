@@ -103,4 +103,19 @@ describe("Database Migrations & Seed Sanity Validation", () => {
     expect(seedContent.includes("INSERT INTO stock_movements")).toBe(true);
     expect(seedContent.includes("INSERT INTO sales")).toBe(true);
   });
+
+  it("verifies Step 3 migration 5 defines catalog extensions, serial sale lock, and stock RPCs", () => {
+    const migration5Content = fs.readFileSync(
+      path.join(migrationsDir, "20261022000005_catalog_and_inventory.sql"),
+      "utf-8"
+    );
+
+    expect(migration5Content.includes("fn_check_serial_sale_rules")).toBe(true);
+    expect(migration5Content.includes("trg_check_serial_sale_rules")).toBe(true);
+    expect(migration5Content.includes("CREATE OR REPLACE VIEW view_supplier_balances")).toBe(true);
+    expect(migration5Content.includes("CREATE OR REPLACE FUNCTION fn_receive_purchase")).toBe(true);
+    expect(migration5Content.includes("CREATE OR REPLACE FUNCTION fn_adjust_stock")).toBe(true);
+    expect(migration5Content.includes("CREATE OR REPLACE FUNCTION fn_stock_take")).toBe(true);
+    expect(migration5Content.includes("CREATE OR REPLACE FUNCTION fn_transfer_stock")).toBe(true);
+  });
 });

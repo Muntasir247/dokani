@@ -5,7 +5,7 @@ import { TenantProvider, TenantMembership } from "@/context/tenant-context";
 import { TenantSwitcher } from "@/components/tenant-switcher";
 import { UserRole } from "@/types/database.types";
 import Link from "next/link";
-import { LogOut, ShoppingCart, Package, Users, BarChart3, Settings } from "lucide-react";
+import { LogOut, ShoppingCart, Package, Users, BarChart3, Settings, Boxes, Truck } from "lucide-react";
 import { PermissionGuard } from "@/components/ui/permission-guard";
 
 export default async function AppLayout({
@@ -103,6 +103,27 @@ export default async function AppLayout({
                   <Package className="h-4 w-4" />
                   <span>Catalog</span>
                 </Link>
+
+                {/* Inventory Operations: Hidden for Cashiers */}
+                <PermissionGuard action="manage:inventory">
+                  <Link
+                    href="/inventory"
+                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 hover:bg-slate-100 hover:text-slate-900 transition"
+                  >
+                    <Boxes className="h-4 w-4" />
+                    <span>Inventory</span>
+                  </Link>
+                </PermissionGuard>
+
+                <PermissionGuard action="manage:inventory">
+                  <Link
+                    href="/inventory/suppliers"
+                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 hover:bg-slate-100 hover:text-slate-900 transition"
+                  >
+                    <Truck className="h-4 w-4" />
+                    <span>Suppliers</span>
+                  </Link>
+                </PermissionGuard>
 
                 <Link
                   href="/customers"
