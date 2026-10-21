@@ -48,8 +48,8 @@ const ROLE_PERMISSIONS: Record<PermissionAction, readonly UserRole[]> = {
   "view:catalog": ["owner", "manager", "cashier"],
   "view:stock": ["owner", "manager", "cashier"],
 
-  // Sale Voiding / Deletion
-  "void:sale": ["owner"],
+  // Sale Voiding / Deletion (Manager+ only, with reason)
+  "void:sale": ["owner", "manager"],
 };
 
 /**

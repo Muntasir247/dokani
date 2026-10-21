@@ -807,6 +807,12 @@ export type Database = {
           due_amount: number;
           change_amount: number;
           notes: string | null;
+          status: "completed" | "voided" | "partially_returned" | "returned";
+          voided_at: string | null;
+          voided_by: string | null;
+          void_reason: string | null;
+          discount_type: string;
+          discount_rate: number;
           sold_at: string;
           created_at: string;
           updated_at: string;
@@ -829,6 +835,12 @@ export type Database = {
           due_amount?: number;
           change_amount?: number;
           notes?: string | null;
+          status?: "completed" | "voided" | "partially_returned" | "returned";
+          voided_at?: string | null;
+          voided_by?: string | null;
+          void_reason?: string | null;
+          discount_type?: string;
+          discount_rate?: number;
           sold_at?: string;
           created_at?: string;
           updated_at?: string;
@@ -851,6 +863,12 @@ export type Database = {
           due_amount?: number;
           change_amount?: number;
           notes?: string | null;
+          status?: "completed" | "voided" | "partially_returned" | "returned";
+          voided_at?: string | null;
+          voided_by?: string | null;
+          void_reason?: string | null;
+          discount_type?: string;
+          discount_rate?: number;
           sold_at?: string;
           created_at?: string;
           updated_at?: string;
@@ -971,6 +989,7 @@ export type Database = {
           customer_id: string | null;
           return_number: string;
           refund_amount: number;
+          refund_method: PaymentMethod;
           reason: string | null;
           created_at: string;
           updated_at: string;
@@ -986,6 +1005,7 @@ export type Database = {
           customer_id?: string | null;
           return_number: string;
           refund_amount?: number;
+          refund_method?: PaymentMethod;
           reason?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -1001,6 +1021,7 @@ export type Database = {
           customer_id?: string | null;
           return_number?: string;
           refund_amount?: number;
+          refund_method?: PaymentMethod;
           reason?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -1214,6 +1235,114 @@ export type Database = {
         };
         Relationships: [];
       };
+      branch_invoice_sequences: {
+        Row: {
+          tenant_id: string;
+          store_id: string;
+          prefix: string;
+          last_seq: number;
+          updated_at: string;
+        };
+        Insert: {
+          tenant_id: string;
+          store_id: string;
+          prefix?: string;
+          last_seq?: number;
+          updated_at?: string;
+        };
+        Update: {
+          tenant_id?: string;
+          store_id?: string;
+          prefix?: string;
+          last_seq?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      return_items: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          return_id: string;
+          sale_item_id: string | null;
+          variant_id: string;
+          quantity: number;
+          refund_unit_price: number;
+          subtotal: number;
+          restock: boolean;
+          serial_numbers: string[];
+          created_at: string;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          return_id: string;
+          sale_item_id?: string | null;
+          variant_id: string;
+          quantity: number;
+          refund_unit_price: number;
+          subtotal: number;
+          restock?: boolean;
+          serial_numbers?: string[];
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          return_id?: string;
+          sale_item_id?: string | null;
+          variant_id?: string;
+          quantity?: number;
+          refund_unit_price?: number;
+          subtotal?: number;
+          restock?: boolean;
+          serial_numbers?: string[];
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Relationships: [];
+      };
+      customer_payments: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          customer_id: string;
+          amount: number;
+          payment_method: PaymentMethod;
+          reference: string | null;
+          notes: string | null;
+          paid_at: string;
+          created_at: string;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          customer_id: string;
+          amount: number;
+          payment_method?: PaymentMethod;
+          reference?: string | null;
+          notes?: string | null;
+          paid_at?: string;
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          customer_id?: string;
+          amount?: number;
+          payment_method?: PaymentMethod;
+          reference?: string | null;
+          notes?: string | null;
+          paid_at?: string;
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       view_current_stock: {
@@ -1258,6 +1387,22 @@ export type Database = {
           total_paid: number;
           current_due: number;
           last_purchase_at: string | null;
+        };
+        Relationships: [];
+      };
+      view_customer_balances: {
+        Row: {
+          customer_id: string;
+          tenant_id: string;
+          name: string;
+          phone: string | null;
+          email: string | null;
+          address: string | null;
+          credit_limit: number;
+          opening_balance: number;
+          total_sales_due: number;
+          total_payments: number;
+          current_due: number;
         };
         Relationships: [];
       };
@@ -1380,6 +1525,41 @@ export type Database = {
           p_quantity: number;
           p_serials?: string[];
           p_notes?: string;
+        };
+        Returns: Json;
+      };
+      fn_create_sale: {
+        Args: {
+          p_tenant_id: string;
+          p_store_id: string;
+          p_location_id: string;
+          p_customer_id?: string | null;
+          p_cashier_id?: string | null;
+          p_items: Json;
+          p_cart_discount_type?: string;
+          p_cart_discount_value?: number;
+          p_payments: Json;
+          p_notes?: string | null;
+        };
+        Returns: Json;
+      };
+      fn_return_sale: {
+        Args: {
+          p_tenant_id: string;
+          p_sale_id: string;
+          p_store_id: string;
+          p_location_id: string;
+          p_items: Json;
+          p_refund_method?: PaymentMethod;
+          p_reason?: string | null;
+        };
+        Returns: Json;
+      };
+      fn_void_sale: {
+        Args: {
+          p_tenant_id: string;
+          p_sale_id: string;
+          p_reason: string;
         };
         Returns: Json;
       };

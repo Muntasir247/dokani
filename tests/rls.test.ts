@@ -151,10 +151,12 @@ describe("Step 2: Authentication, Multi-Tenant Isolation & Role-Based Access Con
       expect(can(managerRole, "manage:expenses")).toBe(true);
       expect(can(managerRole, "manage:members")).toBe(true);
 
+      // Allowed for Manager in Step 4
+      expect(can(managerRole, "void:sale")).toBe(true);
+
       // FORBIDDEN for Manager
       expect(can(managerRole, "manage:billing")).toBe(false);
       expect(can(managerRole, "manage:tenant")).toBe(false);
-      expect(can(managerRole, "void:sale")).toBe(false);
     });
 
     it("allows owners full administrative access", () => {

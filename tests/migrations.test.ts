@@ -118,4 +118,19 @@ describe("Database Migrations & Seed Sanity Validation", () => {
     expect(migration5Content.includes("CREATE OR REPLACE FUNCTION fn_stock_take")).toBe(true);
     expect(migration5Content.includes("CREATE OR REPLACE FUNCTION fn_transfer_stock")).toBe(true);
   });
+
+  it("verifies Step 4 migration 6 defines POS sales RPCs, sequential invoice sequences, returns, and void", () => {
+    const migration6Content = fs.readFileSync(
+      path.join(migrationsDir, "20261022000006_pos_and_sales.sql"),
+      "utf-8"
+    );
+
+    expect(migration6Content.includes("branch_invoice_sequences")).toBe(true);
+    expect(migration6Content.includes("return_items")).toBe(true);
+    expect(migration6Content.includes("customer_payments")).toBe(true);
+    expect(migration6Content.includes("view_customer_balances")).toBe(true);
+    expect(migration6Content.includes("CREATE OR REPLACE FUNCTION fn_create_sale")).toBe(true);
+    expect(migration6Content.includes("CREATE OR REPLACE FUNCTION fn_return_sale")).toBe(true);
+    expect(migration6Content.includes("CREATE OR REPLACE FUNCTION fn_void_sale")).toBe(true);
+  });
 });
