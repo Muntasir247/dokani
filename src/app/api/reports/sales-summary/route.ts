@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { can } from "@/lib/auth/permissions";
 import { UserRole } from "@/types/database.types";
+import { assertFeatureEnabled } from "@/lib/billing/guard";
 
 export async function GET(req: NextRequest) {
   try {
@@ -73,6 +74,25 @@ export async function GET(req: NextRequest) {
       totalRevenuePoisha += s.total_amount;
       totalPaidPoisha += s.paid_amount;
       totalDuePoisha += s.due_amount;
+    }
+
+    const exportFormat = searchParams.get("export");
+    if (exportFormat === "csv") {
+      await assertFeatureEnabled(supabase, tenantId, "exportReports");
+      const csvHeader = "Invoice Sold At,Total (BDT),Paid (BDT),Due (BDT)\n";
+      const csvRows = (sales || [])
+        .map(
+          (s) =>
+            `"${s.sold_at}",${(s.total_amount / 100).toFixed(2)},${(s.paid_amount / 100).toFixed(2)},${(s.due_amount / 100).toFixed(2)}`
+        )
+        .join("\n");
+
+      return new NextResponse(csvHeader + csvRows, {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="sales-summary-${tenantId}.csv"`,
+        },
+      });
     }
 
     return NextResponse.json({

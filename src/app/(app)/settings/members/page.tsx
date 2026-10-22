@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { useTenant } from "@/context/tenant-context";
 import { UserRole } from "@/types/database.types";
 import { Button } from "@/components/ui/button";
@@ -190,11 +191,33 @@ export default function MembersSettingsPage() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div>
+      <div className="border-b border-slate-200 pb-5">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">Staff & Permissions</h1>
         <p className="mt-1 text-sm text-slate-500">
           Manage who can access {activeTenant?.name} and assign role permissions.
         </p>
+
+        {/* Subnav Tabs */}
+        <div className="flex items-center gap-2 mt-4">
+          <Link
+            href="/settings"
+            className="rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition"
+          >
+            Store & Invoices
+          </Link>
+          <Link
+            href="/settings/members"
+            className="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700"
+          >
+            Staff & Roles
+          </Link>
+          <Link
+            href="/settings/billing"
+            className="rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition"
+          >
+            Plan & Billing
+          </Link>
+        </div>
       </div>
 
       {feedback && (

@@ -66,6 +66,7 @@ export type Database = {
           full_name: string;
           phone: string | null;
           avatar_url: string | null;
+          is_super_admin: boolean;
           created_at: string;
           updated_at: string;
           deleted_at: string | null;
@@ -77,6 +78,7 @@ export type Database = {
           full_name: string;
           phone?: string | null;
           avatar_url?: string | null;
+          is_super_admin?: boolean;
           created_at?: string;
           updated_at?: string;
           deleted_at?: string | null;
@@ -88,6 +90,7 @@ export type Database = {
           full_name?: string;
           phone?: string | null;
           avatar_url?: string | null;
+          is_super_admin?: boolean;
           created_at?: string;
           updated_at?: string;
           deleted_at?: string | null;
@@ -213,6 +216,13 @@ export type Database = {
           status: string;
           current_period_start: string;
           current_period_end: string | null;
+          trial_ends_at: string | null;
+          grace_period_ends_at: string | null;
+          cancel_at_period_end: boolean;
+          billing_interval: "month" | "year";
+          payment_provider: string | null;
+          provider_subscription_id: string | null;
+          provider_customer_id: string | null;
           max_stores: number;
           max_products: number;
           max_staff: number;
@@ -229,6 +239,13 @@ export type Database = {
           status?: string;
           current_period_start?: string;
           current_period_end?: string | null;
+          trial_ends_at?: string | null;
+          grace_period_ends_at?: string | null;
+          cancel_at_period_end?: boolean;
+          billing_interval?: "month" | "year";
+          payment_provider?: string | null;
+          provider_subscription_id?: string | null;
+          provider_customer_id?: string | null;
           max_stores?: number;
           max_products?: number;
           max_staff?: number;
@@ -245,6 +262,13 @@ export type Database = {
           status?: string;
           current_period_start?: string;
           current_period_end?: string | null;
+          trial_ends_at?: string | null;
+          grace_period_ends_at?: string | null;
+          cancel_at_period_end?: boolean;
+          billing_interval?: "month" | "year";
+          payment_provider?: string | null;
+          provider_subscription_id?: string | null;
+          provider_customer_id?: string | null;
           max_stores?: number;
           max_products?: number;
           max_staff?: number;
@@ -1452,6 +1476,93 @@ export type Database = {
         };
         Relationships: [];
       };
+      subscription_invoices: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          invoice_number: string;
+          amount_poisha: number;
+          currency: string;
+          plan_tier: PlanTier;
+          billing_interval: "month" | "year";
+          status: "pending" | "paid" | "failed" | "refunded";
+          payment_provider: string;
+          provider_transaction_id: string | null;
+          provider_payload: Json | null;
+          period_start: string;
+          period_end: string;
+          paid_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          invoice_number: string;
+          amount_poisha: number;
+          currency?: string;
+          plan_tier: PlanTier;
+          billing_interval?: "month" | "year";
+          status?: "pending" | "paid" | "failed" | "refunded";
+          payment_provider: string;
+          provider_transaction_id?: string | null;
+          provider_payload?: Json | null;
+          period_start: string;
+          period_end: string;
+          paid_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          invoice_number?: string;
+          amount_poisha?: number;
+          currency?: string;
+          plan_tier?: PlanTier;
+          billing_interval?: "month" | "year";
+          status?: "pending" | "paid" | "failed" | "refunded";
+          payment_provider?: string;
+          provider_transaction_id?: string | null;
+          provider_payload?: Json | null;
+          period_start?: string;
+          period_end?: string;
+          paid_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      payment_webhooks_log: {
+        Row: {
+          id: string;
+          provider: string;
+          idempotency_key: string;
+          event_type: string | null;
+          status: string;
+          payload: Json;
+          error_message: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          provider: string;
+          idempotency_key: string;
+          event_type?: string | null;
+          status?: string;
+          payload: Json;
+          error_message?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          provider?: string;
+          idempotency_key?: string;
+          event_type?: string | null;
+          status?: string;
+          payload?: Json;
+          error_message?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       view_current_stock: {
@@ -1703,6 +1814,46 @@ export type Database = {
       fn_get_public_invoice: {
         Args: {
           p_share_token: string;
+        };
+        Returns: Json;
+      };
+      fn_check_plan_limits: {
+        Args: {
+          p_tenant_id: string;
+          p_resource: string;
+        };
+        Returns: Json;
+      };
+      fn_record_subscription_payment: {
+        Args: {
+          p_tenant_id: string;
+          p_plan: PlanTier;
+          p_interval: string;
+          p_amount_poisha: number;
+          p_provider: string;
+          p_transaction_id: string;
+          p_payload: Json;
+          p_max_stores: number;
+          p_max_products: number;
+          p_max_staff: number;
+        };
+        Returns: Json;
+      };
+      fn_admin_extend_trial: {
+        Args: {
+          p_tenant_id: string;
+          p_days: number;
+        };
+        Returns: Json;
+      };
+      fn_admin_set_plan: {
+        Args: {
+          p_tenant_id: string;
+          p_plan: PlanTier;
+          p_status: string;
+          p_max_stores: number;
+          p_max_products: number;
+          p_max_staff: number;
         };
         Returns: Json;
       };

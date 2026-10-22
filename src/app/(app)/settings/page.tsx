@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { useTenant } from "@/context/tenant-context";
 import {
   Printer,
@@ -165,6 +166,28 @@ export default function SettingsPage() {
         <p className="text-sm text-slate-500">
           Configure business profile, VAT/BIN numbers, receipt formats, taxes, and loyalty points
         </p>
+
+        {/* Subnav Tabs */}
+        <div className="flex items-center gap-2 mt-4">
+          <Link
+            href="/settings"
+            className="rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700"
+          >
+            Store & Invoices
+          </Link>
+          <Link
+            href="/settings/members"
+            className="rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition"
+          >
+            Staff & Roles
+          </Link>
+          <Link
+            href="/settings/billing"
+            className="rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition"
+          >
+            Plan & Billing
+          </Link>
+        </div>
       </div>
 
       {successMsg && (

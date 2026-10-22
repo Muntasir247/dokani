@@ -4,6 +4,7 @@ import { sanitizeVariantForRole, assertPermission } from "@/lib/auth/permissions
 import { createProductSchema } from "@/lib/validation/catalog";
 import { logAuditEvent } from "@/lib/audit";
 import { UserRole } from "@/types/database.types";
+import { assertCanCreateResource, assertFeatureEnabled } from "@/lib/billing/guard";
 
 export async function GET(req: NextRequest) {
   try {
@@ -223,11 +224,13 @@ export async function POST(req: NextRequest) {
 
     try {
       assertPermission(memberData.role, "manage:catalog");
-    } catch {
-      return NextResponse.json(
-        { error: "Forbidden: Cashiers cannot create or edit products" },
-        { status: 403 }
-      );
+      await assertCanCreateResource(supabase, data.tenant_id, "products");
+      if (data.has_serials) {
+        await assertFeatureEnabled(supabase, data.tenant_id, "serialTracking");
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Forbidden: Plan limit or permission error";
+      return NextResponse.json({ error: message }, { status: 403 });
     }
 
     // Verify SKU uniqueness across proposed variants and tenant DB

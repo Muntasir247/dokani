@@ -205,6 +205,46 @@ This document tracks major architectural decisions for **Dokani**, capturing the
   - *Sequential public invoice URLs (`/invoice/123`)*: Insecure; exposes total transaction volume and allows competitive scrapers to harvest customer lists.
   - *Floating point loyalty point conversions*: Causes round-off errors and ledger drift.
 
+---
+
+## ADR 012: SaaS Billing, Plan Enforcement, Payment Gateways (SSLCommerz & bKash), and Subscription Lifecycle
+
+* **Status**: Accepted
+* **Date**: 2026-10-22
+* **Context**:
+  Dokani POS SaaS is distributed under tiered subscription plans: Free Starter, Pro Merchant (৳1,500/mo), and Business Enterprise (৳4,000/mo). To ensure a sustainable SaaS business model in Bangladesh:
+  1. Billing must support domestic payment methods (bKash Tokenized Checkout, Nagad, Bangladeshi Cards via SSLCommerz).
+  2. Plan resource caps (stores, staff members, catalog products) and feature flags (multi-branch, serial warranty tracking, CSV reports export) must be enforced server-side so malicious actors cannot bypass limits via raw HTTP calls.
+  3. Subscription lifecycles must balance merchant flexibility with business protection: a 14-day free trial on onboarding, an active state, a 7-day grace period upon payment failure, and a strict read-only mode afterwards where store data is NEVER deleted and report export remains permitted.
+  4. Payment webhooks/IPNs must be resilient against replay attacks and signature spoofing.
+* **Decision**:
+  1. **Single Source of Truth (`src/lib/billing/plan-config.ts`)**:
+     - Defines `PLANS` with resource limits, feature flags, monthly/yearly pricing in integer minor units (poisha). Drives both marketing/upgrade UI and backend guards.
+     - Proration logic calculates unused days remaining on current plan as a credit toward the new tier in integer poisha with zero rounding error.
+  2. **Payment Gateway Abstraction**:
+     - Standardized `PaymentProvider` interface with `createCheckoutSession`, `verifyWebhookOrIPN`, and `queryTransaction`.
+     - `SslCommerzProvider`: Generates MD5 hash digests using merchant credentials across sorted verify parameters.
+     - `BkashProvider`: Implements bKash Tokenized Checkout (grant token, create, callback execution).
+  3. **Idempotency & Replay Protection**:
+     - Dedicated `payment_webhooks_log` table storing unique `idempotency_key` (e.g., `sslcz_${tranId}_${valId}`). Duplicate webhooks are logged and acknowledged with HTTP 200 without modifying subscriptions or dispatching duplicate receipts.
+  4. **Subscription Lifecycle State Machine (`src/lib/billing/lifecycle.ts`)**:
+     - Pure, deterministic state machine evaluating `trialing`, `active`, `past_due` (with 7-day grace period), `canceled`, and `isReadOnly`.
+     - Read-only policy: All write operations (`assertCanCreateResource`) throw `SubscriptionReadOnlyError` after grace period expiry, while allowing merchants to log in, view catalogs, and export historical CSV data.
+  5. **Super-Admin Platform Governance (`/admin`)**:
+     - Independent route group guarded by `profiles.is_super_admin`.
+     - Platform administrators can view tenant usage meters, extend trials (`fn_admin_extend_trial`), and manually override plans (`fn_admin_set_plan`).
+  6. **Transactional Emails**:
+     - Provider abstraction (`EmailProvider`) supporting Resend and console fallback with branded HTML templates for welcome, trial ending, payment receipt, and payment failure notices.
+* **Consequences**:
+  - Eliminates unauthorized tier bypassing; API callers without required plan tiers are rejected with HTTP 403 / `FeatureNotAllowedError` / `PlanLimitExceededError`.
+  - Guarantees financial reconciliation accuracy for Bangladesh mobile banking and card gateways.
+  - Ensures trust by guaranteeing store data is never deleted due to expired subscriptions.
+* **Alternatives Rejected**:
+  - *Client-side feature gates only*: Insecure; users could bypass limits by sending direct POST requests.
+  - *Hard tenant lockout / data deletion on payment lapse*: Unacceptable for retail merchants; destroys store trust. A 7-day grace period followed by read-only data preservation is optimal.
+  - *Floating point proration calculations*: Causes fractional cent rounding errors. Poisha integer math ensures exact accounting.
+
+
 
 
 

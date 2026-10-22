@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { callRpc } from "@/lib/supabase/rpc";
+import { assertCanCreateResource } from "@/lib/billing/guard";
 
 const inviteSchema = z.object({
   tenantId: z.string().uuid("Invalid tenant ID"),
@@ -32,6 +33,9 @@ export async function POST(req: Request) {
     }
 
     const { tenantId, email, role } = parseResult.data;
+
+    // Enforce plan limits on active staff count
+    await assertCanCreateResource(supabase, tenantId, "staff");
 
     // Call invite RPC function
     const { data, error } = await callRpc(supabase, "fn_invite_staff", {

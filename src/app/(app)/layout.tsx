@@ -5,7 +5,7 @@ import { TenantProvider, TenantMembership } from "@/context/tenant-context";
 import { TenantSwitcher } from "@/components/tenant-switcher";
 import { UserRole } from "@/types/database.types";
 import Link from "next/link";
-import { LogOut, ShoppingCart, Package, Users, BarChart3, Settings, Boxes, Truck } from "lucide-react";
+import { LogOut, ShoppingCart, Package, Users, BarChart3, Settings, Boxes, Truck, CreditCard } from "lucide-react";
 import { PermissionGuard } from "@/components/ui/permission-guard";
 
 export default async function AppLayout({
@@ -144,14 +144,25 @@ export default async function AppLayout({
                   </Link>
                 </PermissionGuard>
 
-                {/* Staff Settings: Hidden for Cashiers */}
+                {/* Settings & Admin: Hidden for Cashiers */}
                 <PermissionGuard action="manage:members">
                   <Link
-                    href="/settings/members"
+                    href="/settings"
                     className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 hover:bg-slate-100 hover:text-slate-900 transition"
                   >
                     <Settings className="h-4 w-4" />
-                    <span>Staff</span>
+                    <span>Settings</span>
+                  </Link>
+                </PermissionGuard>
+
+                {/* Billing: Owner only */}
+                <PermissionGuard action="manage:billing">
+                  <Link
+                    href="/settings/billing"
+                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 hover:bg-slate-100 hover:text-slate-900 transition"
+                  >
+                    <CreditCard className="h-4 w-4 text-emerald-600" />
+                    <span>Billing</span>
                   </Link>
                 </PermissionGuard>
               </nav>

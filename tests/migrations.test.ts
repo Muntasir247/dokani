@@ -162,4 +162,21 @@ describe("Database Migrations & Seed Sanity Validation", () => {
     expect(migration8Content.includes("CREATE OR REPLACE FUNCTION fn_get_public_invoice")).toBe(true);
     expect(migration8Content.includes("sales_public_read")).toBe(true);
   });
+
+  it("verifies Step 7 migration 9 defines billing, subscription invoices, webhooks log, and admin RPCs", () => {
+    const migration9Content = fs.readFileSync(
+      path.join(migrationsDir, "20261022000009_billing_plans_and_subscriptions.sql"),
+      "utf-8"
+    );
+
+    expect(migration9Content.includes("is_super_admin")).toBe(true);
+    expect(migration9Content.includes("subscription_invoices")).toBe(true);
+    expect(migration9Content.includes("payment_webhooks_log")).toBe(true);
+    expect(migration9Content.includes("trial_ends_at")).toBe(true);
+    expect(migration9Content.includes("grace_period_ends_at")).toBe(true);
+    expect(migration9Content.includes("CREATE OR REPLACE FUNCTION fn_check_plan_limits")).toBe(true);
+    expect(migration9Content.includes("CREATE OR REPLACE FUNCTION fn_record_subscription_payment")).toBe(true);
+    expect(migration9Content.includes("CREATE OR REPLACE FUNCTION fn_admin_extend_trial")).toBe(true);
+    expect(migration9Content.includes("CREATE OR REPLACE FUNCTION fn_admin_set_plan")).toBe(true);
+  });
 });
