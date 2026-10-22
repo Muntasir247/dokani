@@ -443,14 +443,13 @@ BEGIN
     -- 7. Outstanding Customer Dues Count & Total
     SELECT
         COUNT(*),
-        COALESCE(SUM(current_balance), 0)
+        COALESCE(SUM(current_due), 0)
     INTO
         v_pending_due_customers,
         v_total_pending_dues
-    FROM customers
+    FROM view_customer_balances
     WHERE tenant_id = p_tenant_id
-      AND current_balance > 0
-      AND deleted_at IS NULL;
+      AND current_due > 0;
 
     RETURN jsonb_build_object(
         'targetDate', p_target_date,
@@ -594,19 +593,20 @@ BEGIN
             c.id AS customer_id,
             c.name AS customer_name,
             c.phone,
-            c.current_balance AS total_balance_poisha,
+            COALESCE(cb.current_due, 0) AS total_balance_poisha,
             COALESCE(SUM(CASE WHEN CURRENT_DATE - s.sold_at::DATE <= 30 THEN s.due_amount ELSE 0 END), 0) AS bucket_0_30,
             COALESCE(SUM(CASE WHEN CURRENT_DATE - s.sold_at::DATE BETWEEN 31 AND 60 THEN s.due_amount ELSE 0 END), 0) AS bucket_31_60,
             COALESCE(SUM(CASE WHEN CURRENT_DATE - s.sold_at::DATE BETWEEN 61 AND 90 THEN s.due_amount ELSE 0 END), 0) AS bucket_61_90,
             COALESCE(SUM(CASE WHEN CURRENT_DATE - s.sold_at::DATE > 90 THEN s.due_amount ELSE 0 END), 0) AS bucket_90_plus
         FROM customers c
         JOIN sales s ON s.customer_id = c.id
+        LEFT JOIN view_customer_balances cb ON cb.customer_id = c.id
         WHERE c.tenant_id = p_tenant_id
           AND s.due_amount > 0
           AND s.status = 'completed'
           AND s.deleted_at IS NULL
-        GROUP BY c.id, c.name, c.phone, c.current_balance
-        ORDER BY c.current_balance DESC
+        GROUP BY c.id, c.name, c.phone, cb.current_due
+        ORDER BY total_balance_poisha DESC
         LIMIT 20
     ) c_aging;
 

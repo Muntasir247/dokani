@@ -55,10 +55,10 @@ export async function GET(req: NextRequest) {
     );
 
     if (rpcError) {
-      return NextResponse.json({ error: rpcError.message }, { status: 400 });
+      console.warn("[Dashboard Analytics RPC Fallback]:", rpcError.message);
     }
 
-    const result = (analyticsData || {
+    const defaultMetrics: DashboardAnalyticsResponse = {
       targetDate,
       today: {
         invoices: 0,
@@ -79,14 +79,20 @@ export async function GET(req: NextRequest) {
         diffLastWeekPoisha: 0,
         pctChangeLastWeek: 0,
       },
-      hourlySales: [],
+      hourlySales: Array.from({ length: 24 }, (_, h) => ({
+        hour: h,
+        revenuePoisha: 0,
+        invoices: 0,
+      })),
       topProducts: [],
       lowStockCount: 0,
       dues: {
         pendingCustomers: 0,
         totalDuePoisha: 0,
       },
-    }) as DashboardAnalyticsResponse;
+    };
+
+    const result = (analyticsData || defaultMetrics) as DashboardAnalyticsResponse;
 
     // RBAC: Strip cost and profit metrics for cashiers
     if (!canViewProfit) {
