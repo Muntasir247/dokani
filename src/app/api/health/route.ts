@@ -7,6 +7,7 @@ export async function GET() {
   const startTime = Date.now();
   let dbStatus: "connected" | "disconnected" = "disconnected";
   let dbLatencyMs = 0;
+  let dbError: string | null = null;
 
   try {
     const supabase = getServiceSupabase();
@@ -16,9 +17,12 @@ export async function GET() {
     dbLatencyMs = Date.now() - dbStart;
     if (!error) {
       dbStatus = "connected";
+    } else {
+      dbError = error.message;
     }
-  } catch {
+  } catch (err: unknown) {
     dbStatus = "disconnected";
+    dbError = err instanceof Error ? err.message : "Unknown error connecting to database";
   }
 
   const memory = process.memoryUsage();
@@ -35,6 +39,7 @@ export async function GET() {
       database: {
         status: dbStatus,
         latencyMs: dbLatencyMs,
+        ...(dbError ? { error: dbError } : {}),
       },
       memory: {
         rssMb: Math.round(memory.rss / (1024 * 1024)),

@@ -7,6 +7,7 @@ export const clientEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z
     .string()
     .url("NEXT_PUBLIC_SUPABASE_URL must be a valid URL")
+    .transform((val) => val.replace(/\/rest\/v1\/?$/, "").replace(/\/+$/, ""))
     .default("http://127.0.0.1:54321"),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z
     .string()
@@ -15,6 +16,7 @@ export const clientEnvSchema = z.object({
   NEXT_PUBLIC_APP_URL: z
     .string()
     .url("NEXT_PUBLIC_APP_URL must be a valid URL")
+    .transform((val) => val.replace(/\/+$/, ""))
     .default("http://localhost:3000"),
   NEXT_PUBLIC_DEFAULT_CURRENCY: z.string().default("BDT"),
   NEXT_PUBLIC_DEFAULT_TIMEZONE: z.string().default("Asia/Dhaka"),
