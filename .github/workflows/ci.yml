@@ -1,0 +1,136 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-typecheck:
+    name: Lint & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Code Quality Linting
+        run: npm run lint
+
+      - name: TypeScript Type Checking
+        run: npm run typecheck
+
+  unit-and-integration-tests:
+    name: Unit & Integration Test Suite
+    runs-on: ubuntu-latest
+    needs: [lint-and-typecheck]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Execute Vitest Suite (with coverage)
+        run: npm test
+        env:
+          NODE_ENV: test
+          NEXT_PUBLIC_SUPABASE_URL: https://dokani-test.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.test-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.test-service-key
+          COURIER_ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef
+
+  migration-check:
+    name: Migration Verification on Fresh PostgreSQL
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: dokani_ci_fresh
+          POSTGRES_USER: dokani_user
+          POSTGRES_PASSWORD: dokani_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup PostgreSQL Client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Apply All Schema Migrations Sequentially
+        run: |
+          for file in $(ls -1 supabase/migrations/*.sql | sort); do
+            echo "Applying migration: $file"
+            PGPASSWORD=dokani_password psql -h localhost -U dokani_user -d dokani_ci_fresh -f "$file"
+          done
+
+      - name: Verify RLS Policies & Views Integrity
+        run: |
+          PGPASSWORD=dokani_password psql -h localhost -U dokani_user -d dokani_ci_fresh -c "
+            SELECT count(*) AS total_tables FROM information_schema.tables WHERE table_schema = 'public';
+            SELECT count(*) AS total_views FROM information_schema.views WHERE table_schema = 'public';
+          "
+
+  e2e-tests:
+    name: Playwright End-to-End Tests
+    runs-on: ubuntu-latest
+    needs: [lint-and-typecheck]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright Tests
+        run: npm run test:e2e
+        env:
+          NODE_ENV: test
+          CI: "true"
+          NEXT_PUBLIC_SUPABASE_URL: https://dokani-test.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.test-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.test-service-key
+
+      - name: Upload Test Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14

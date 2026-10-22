@@ -194,12 +194,13 @@ export class WebhookDispatcher {
     await supabase.from("webhook_deliveries").insert({
       tenant_id: event.tenantId,
       endpoint_id: endpoint.id,
-      event_type: event.event,
-      payload: event as unknown as Record<string, unknown>,
-      response_status: statusCode || null,
-      response_body: responseText ? responseText.substring(0, 1000) : (errorMessage || null),
-      duration_ms: durationMs,
-      attempt_count: attempt,
+      event: event.event,
+      payload: event as any,
+      status: isSuccess ? "delivered" : "failed",
+      status_code: statusCode || null,
+      last_error: responseText ? responseText.substring(0, 1000) : (errorMessage || null),
+      attempts: attempt,
+      max_attempts: 3,
       next_retry_at: nextRetryAt,
     });
 

@@ -183,7 +183,7 @@ export class CourierService {
       recipient_name: params.recipientName,
       recipient_phone: params.recipientPhone,
       recipient_address: params.recipientAddress,
-      cod_amount_poisha: Math.round(codBdt * 100),
+      cod_amount_poisha: Math.round(resolvedCod * 100),
       delivery_fee_poisha: Math.round((result.deliveryFeeBdt || 0) * 100),
       timeline: initialTimeline,
       metadata: result.rawResponse || {},
