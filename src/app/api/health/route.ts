@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase/client";
+import { getServerEnv } from "@/lib/config/env";
 
 export const dynamic = "force-dynamic";
 
