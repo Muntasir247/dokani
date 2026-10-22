@@ -23,7 +23,7 @@
     "@zxing/library": "^0.23.0",
     "clsx": "^2.1.1",
     "dexie": "^4.4.6",
-    "lucide-react": "^0.477.0",
+    "lucide-react": "^1.59.0",
     "next": "^15.5.28",
     "qrcode": "^1.5.4",
     "react": "19.0.0",
