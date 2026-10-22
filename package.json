@@ -1,6 +1,26 @@
 {
   "name": "dokani",
   "version": "0.1.0",
+  "description": "Multi-tenant, offline-first Retail POS & Inventory SaaS with real-time stock sync, bKash/SSLCommerz billing, courier automation, and granular RBAC tailored for Bangladesh merchants.",
+  "homepage": "https://thedokani.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Muntasir247/dokani.git"
+  },
+  "keywords": [
+    "pos",
+    "point-of-sale",
+    "saas",
+    "multi-tenant",
+    "nextjs",
+    "supabase",
+    "offline-first",
+    "dexie",
+    "inventory-management",
+    "bangladesh",
+    "sslcommerz",
+    "bkash"
+  ],
   "private": true,
   "scripts": {
     "dev": "next dev",

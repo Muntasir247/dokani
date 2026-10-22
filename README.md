@@ -3,7 +3,7 @@
 [![CI Pipeline](https://github.com/Muntasir247/dokani/actions/workflows/ci.yml/badge.svg)](https://github.com/Muntasir247/dokani/actions/workflows/ci.yml)
 [![Security Headers](https://img.shields.io/badge/SecurityHeaders-A%20Grade-brightgreen)](https://securityheaders.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Built with Next.js 15](https://img.shields.io/badge/Next.js-15.2.1-black)](https://nextjs.org)
+[![Built with Next.js 15](https://img.shields.io/badge/Next.js-15.5.28-black)](https://nextjs.org)
 [![PostgreSQL RLS](https://img.shields.io/badge/Database-PostgreSQL%20RLS-336791)](https://supabase.com)
 
 Dokani is an enterprise-grade, offline-first Point-of-Sale (POS) and inventory SaaS engineered specifically for high-throughput retail stores, supermarkets, gadget shops, and fashion boutiques in emerging markets like Bangladesh.
@@ -28,10 +28,10 @@ Designed to thrive on unstable or disconnected internet connections, Dokani guar
 
 Experience the live interactive POS terminal, reports dashboard, and developer API:
 
-- **Live URL**: [https://dokani.app](https://dokani.app)
-- **Interactive POS Terminal**: [https://dokani.app/pos](https://dokani.app/pos)
-- **Developer REST API & Docs**: [https://dokani.app/api-docs](https://dokani.app/api-docs)
-- **System Health Telemetry**: [https://dokani.app/api/health](https://dokani.app/api/health)
+- **Live URL**: [https://thedokani.vercel.app](https://thedokani.vercel.app)
+- **Interactive POS Terminal**: [https://thedokani.vercel.app/pos](https://thedokani.vercel.app/pos)
+- **Developer REST API & Docs**: [https://thedokani.vercel.app/api-docs](https://thedokani.vercel.app/api-docs)
+- **System Health Telemetry**: [https://thedokani.vercel.app/api/health](https://thedokani.vercel.app/api/health)
 
 ### Demo Credentials
 | Role | Email | Password | Assigned Outlet |
