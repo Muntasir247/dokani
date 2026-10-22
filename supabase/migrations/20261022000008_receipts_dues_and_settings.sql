@@ -71,6 +71,7 @@ CREATE INDEX IF NOT EXISTS idx_customer_payments_sale ON customer_payments(sale_
 -- 5. Updated Customer Balances View
 -- Dues are computed as: opening_balance + sum(unpaid sales due) - sum(unallocated payments)
 -- -----------------------------------------------------------------------------
+DROP VIEW IF EXISTS view_customer_balances CASCADE;
 CREATE OR REPLACE VIEW view_customer_balances AS
 SELECT
     c.id AS customer_id,
