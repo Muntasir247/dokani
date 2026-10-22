@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Store, Building2, CheckCircle2 } from "lucide-react";
+import { Store, Building2, CheckCircle2, AlertTriangle, LogIn } from "lucide-react";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -17,6 +18,18 @@ export default function OnboardingPage() {
   const [timezone] = useState("Asia/Dhaka");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [hasSession, setHasSession] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    async function checkAuth() {
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setHasSession(!!session);
+    }
+    checkAuth();
+  }, []);
 
   // Auto-generate slug and branch code from store name
   const handleStoreNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,9 +59,25 @@ export default function OnboardingPage() {
     setErrorMsg(null);
 
     try {
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        setErrorMsg("No active session found. Please verify your email or sign in first.");
+        setIsLoading(false);
+        return;
+      }
+
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (session.access_token) {
+        headers["Authorization"] = `Bearer ${session.access_token}`;
+      }
+
       const res = await fetch("/api/auth/onboarding", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           tenantName: storeName,
           slug,
@@ -62,7 +91,7 @@ export default function OnboardingPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setErrorMsg(data.error || "Failed to initialize store");
+        setErrorMsg(data.message || data.error || "Failed to initialize store");
         return;
       }
 
@@ -101,6 +130,29 @@ export default function OnboardingPage() {
           </CardHeader>
 
           <CardContent>
+            {hasSession === false && (
+              <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-slate-800">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+                  <div>
+                    <h4 className="text-sm font-semibold text-amber-900">Sign-in Required</h4>
+                    <p className="mt-1 text-xs text-amber-700 leading-relaxed">
+                      You are not currently logged in. If you just created an account, please check your email inbox to confirm your email before setting up your store.
+                    </p>
+                    <div className="mt-3 flex items-center gap-2">
+                      <a
+                        href="/login"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-emerald-700"
+                      >
+                        <LogIn className="h-3.5 w-3.5" />
+                        Go to Sign In
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {errorMsg && (
               <div className="mb-5 rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700">
                 {errorMsg}

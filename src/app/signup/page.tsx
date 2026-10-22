@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Mail } from "lucide-react";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -15,6 +16,8 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const [isEmailSent, setIsEmailSent] = useState(false);
 
   const supabase = createClient();
 
@@ -43,8 +46,8 @@ export default function SignUpPage() {
         router.push("/onboarding");
         router.refresh();
       } else {
-        // If email confirmation is required by Supabase project settings
-        router.push("/onboarding");
+        // Supabase requires email confirmation before a session is issued
+        setIsEmailSent(true);
       }
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : "Failed to sign up");
@@ -69,6 +72,37 @@ export default function SignUpPage() {
       setErrorMsg(err instanceof Error ? err.message : "Google OAuth initiation failed");
     }
   };
+
+  if (isEmailSent) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+        <div className="w-full max-w-md">
+          <Card className="p-8 text-center shadow-xl">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 shadow-sm">
+              <Mail className="h-8 w-8" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-slate-900">Check your inbox</CardTitle>
+            <CardDescription className="mt-2 text-sm text-slate-600 leading-relaxed">
+              We have sent a verification link to <span className="font-semibold text-slate-900">{email}</span>.
+              Please click the link in your email to confirm your account and sign in to complete your store setup.
+            </CardDescription>
+            <div className="mt-8 flex flex-col gap-3">
+              <Link href="/login">
+                <Button className="w-full">Go to Sign In</Button>
+              </Link>
+              <button
+                type="button"
+                onClick={() => setIsEmailSent(false)}
+                className="text-xs text-slate-500 hover:text-slate-800 underline underline-offset-4"
+              >
+                Entered wrong email? Try again
+              </button>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">

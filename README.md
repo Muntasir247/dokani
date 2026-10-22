@@ -213,30 +213,6 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 📸 Portfolio Media & Screenshot Checklist
-
-When showcasing Dokani in your portfolio, record and capture these exact high-impact workflows:
-
-1. **POS Fast-Scan Flow** (`docs/screenshots/01-pos-fast-scan.png`):
-   - Shows barcode search input with immediate product resolution (<100ms).
-   - Multi-item cart with quantity adjustments and discount percentage badges.
-2. **Offline Outbox & Recovery** (`docs/screenshots/02-offline-outbox-sync.gif`):
-   - Disconnect Wi-Fi: Yellow "Working Offline" status badge appears.
-   - Ring up 2 sales into local IndexedDB outbox.
-   - Reconnect Wi-Fi: Outbox flushes with smooth green checkmarks and server sync notification.
-3. **Multi-Tender Payment Dialog** (`docs/screenshots/03-split-payment-modal.png`):
-   - Payment modal displaying split tender (৳1,000 Cash + ৳500 bKash + ৳250 Customer Due).
-   - Change calculation and real-time customer credit limit validation.
-4. **Thermal Receipt & Tax Invoice** (`docs/screenshots/04-receipt-printing.png`):
-   - Side-by-side 80mm thermal receipt and formal A4 invoice with verification QR code.
-5. **Courier Tracking Timeline** (`docs/screenshots/05-courier-tracking.png`):
-   - Consignment view with Steadfast/Pathao tracking code, COD fee, and chronological event timeline.
-6. **Analytics & Hourly Heatmap** (`docs/screenshots/06-analytics-dashboard.png`):
-   - Today's sales summary, gross profit margin, average basket size, and sales-by-hour bar chart.
-7. **Developer REST API Documentation** (`docs/screenshots/07-developer-api-docs.png`):
-   - Modern dark-mode `/api-docs` page showing cURL requests, HMAC-SHA256 signature verification snippet, and OpenAPI 3.1 download.
-
----
 
 ## 📚 Documentation Directory
 

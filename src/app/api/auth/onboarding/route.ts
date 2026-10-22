@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { getClientEnv } from "@/lib/config/env";
 import { callRpc } from "@/lib/supabase/rpc";
+import { Database } from "@/types/database.types";
 
 const onboardingSchema = z.object({
   tenantName: z.string().min(2, "Store name must be at least 2 characters"),
@@ -14,14 +17,53 @@ const onboardingSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const serverSupabase = await createServerSupabaseClient();
+    let supabase = serverSupabase;
+    let user = null;
+    let authError = null;
 
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const cookieUserRes = await serverSupabase.auth.getUser();
+    if (cookieUserRes.data?.user) {
+      user = cookieUserRes.data.user;
+    } else {
+      // Check Authorization Bearer header fallback
+      const authHeader = req.headers.get("authorization") || req.headers.get("Authorization");
+      if (authHeader && authHeader.toLowerCase().startsWith("bearer ")) {
+        const token = authHeader.slice(7).trim();
+        const env = getClientEnv();
+        const tokenClient = createSupabaseClient<Database>(
+          env.NEXT_PUBLIC_SUPABASE_URL,
+          env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+          {
+            global: {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          }
+        );
+        const tokenUserRes = await tokenClient.auth.getUser(token);
+        if (tokenUserRes.data?.user) {
+          user = tokenUserRes.data.user;
+          supabase = tokenClient as unknown as typeof serverSupabase;
+        } else {
+          authError = tokenUserRes.error;
+        }
+      } else {
+        authError = cookieUserRes.error;
+      }
+    }
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          error: "Unauthorized",
+          message:
+            "No active user session found. Please verify your email address or log in to complete store setup.",
+          details: authError?.message || "Missing session cookie or Bearer token",
+        },
+        { status: 401 }
+      );
     }
 
     const body = await req.json();
