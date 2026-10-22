@@ -799,6 +799,7 @@ export type Database = {
           customer_id: string | null;
           cashier_id: string | null;
           invoice_number: string;
+          offline_invoice_number: string | null;
           subtotal: number;
           discount_amount: number;
           tax_amount: number;
@@ -827,6 +828,7 @@ export type Database = {
           customer_id?: string | null;
           cashier_id?: string | null;
           invoice_number: string;
+          offline_invoice_number?: string | null;
           subtotal?: number;
           discount_amount?: number;
           tax_amount?: number;
@@ -855,6 +857,7 @@ export type Database = {
           customer_id?: string | null;
           cashier_id?: string | null;
           invoice_number?: string;
+          offline_invoice_number?: string | null;
           subtotal?: number;
           discount_amount?: number;
           tax_amount?: number;
@@ -1343,6 +1346,48 @@ export type Database = {
         };
         Relationships: [];
       };
+      tenant_devices: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          store_id: string;
+          device_code: string;
+          device_name: string;
+          is_revoked: boolean;
+          revoked_at: string | null;
+          revoked_by: string | null;
+          last_sync_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          store_id: string;
+          device_code: string;
+          device_name: string;
+          is_revoked?: boolean;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          last_sync_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          store_id?: string;
+          device_code?: string;
+          device_name?: string;
+          is_revoked?: boolean;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          last_sync_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       view_current_stock: {
@@ -1540,6 +1585,9 @@ export type Database = {
           p_cart_discount_value?: number;
           p_payments: Json;
           p_notes?: string | null;
+          p_is_offline_sync?: boolean;
+          p_client_sale_id?: string | null;
+          p_offline_invoice_number?: string | null;
         };
         Returns: Json;
       };
@@ -1560,6 +1608,13 @@ export type Database = {
           p_tenant_id: string;
           p_sale_id: string;
           p_reason: string;
+        };
+        Returns: Json;
+      };
+      fn_revoke_device: {
+        Args: {
+          p_tenant_id: string;
+          p_device_id: string;
         };
         Returns: Json;
       };

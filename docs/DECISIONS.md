@@ -145,4 +145,29 @@ This document tracks major architectural decisions for **Dokani**, capturing the
   - *Client-side price calculation trust*: Trusting client payloads enables malicious users or compromised browser clients to change item prices to ৳0 or modify discounts arbitrarily.
   - *Optimistic concurrency control without row locks*: Would cause frequent checkout failures and retry storms on busy retail counters during rush hours.
 
+---
+
+## ADR 010: Offline-First Synchronization Architecture, Dexie Outbox Pattern, Monotonic UUID v7, and Negative Stock Conflict Reconciliation
+* **Status**: Accepted
+* **Date**: 2026-10-22
+* **Context**: In Bangladesh retail stores, frequent power outages (load shedding) and flaky cellular connectivity make synchronous cloud round-trips unacceptable. The POS workstation must operate completely offline, execute checkouts instantaneously, queue mutations locally, synchronize safely upon reconnection, prevent duplicate transactions across network drops, and reconcile stock discrepancies without dropping real-world sales.
+* **Decision**:
+  1. **Dexie (IndexedDB) Local Partitioning**: Database named `dokani_${tenantId}` stores local catalog products, variants, active customers, stock snapshots, serial numbers, and the durable outbox queue. Local data is completely purged on logout.
+  2. **Monotonic RFC 9562 UUID v7**: Client mutation IDs are generated using UUID v7 with sub-millisecond sequential counters, guaranteeing monotonic sortability and eliminating B-tree page splits in PostgreSQL and IndexedDB.
+  3. **FIFO Outbox Engine with Exponential Backoff & Jitter**: Mutations are persisted to IndexedDB before any network transmission. The outbox processor executes items in strict temporal order with exponential backoff ($1\text{s} \to 60\text{s} \pm 20\%$) on 5xx or network errors.
+  4. **Strict Server-Side Idempotency**: Each push carries `idempotencyKey = idemp_{tenantId}_{deviceCode}_{outboxId}`. The server checks the `idempotency_keys` table inside a transaction. Replayed requests return the original response immediately with zero duplicate database operations.
+  5. **Real-World Retail Law (Negative Stock Reconciliation)**: Offline sales represent physical goods that already left the counter. Offline sales are never rolled back or rejected. If server stock is insufficient upon sync, the sale is accepted, the negative inventory movement is recorded in `stock_movements`, and an `alert:negative_stock` audit record is flagged for management review.
+  6. **Dual-Number Sequential Invoicing**: Offline transactions receive immediate client numbers `OFF-{storeCode}-{deviceCode}-{localSeq}` (e.g., `OFF-DHK1-T01-000042`), which are reconciled post-sync with official sequential fiscal numbers (`INV-DHK1-202610-000189`), indexed together for search and reprint.
+  7. **PWA Service Worker**: App shell and static assets are cached via `CacheFirst`. The `/pos` route uses `NetworkFirst` with offline cache fallback, allowing cold-boot loading with zero internet.
+  8. **Terminal Authorization & Remote Revocation**: POS devices register in `tenant_devices`. Managers can remotely revoke stolen or lost terminals via `fn_revoke_device`, immediately rejecting future sync attempts.
+* **Why**:
+  - Eliminates checkout downtime during power cuts and weak internet.
+  - Guarantees financial and inventory consistency: zero lost sales, zero phantom items, and zero duplicated charges.
+  - Cashiers never wait on network spinners.
+* **Alternatives Rejected**:
+  - *SQLite WASM*: Multi-megabyte binary, slow cold start, and requires `COOP`/`COEP` headers that break payment gateway iframes.
+  - *Rejecting oversold offline sales*: Corrupts bookkeeping by dropping sales where real cash and goods already changed hands.
+  - *Server-assigned IDs for offline entities*: Impossible without network connection; client UUID v7 enables immutable identity from creation.
+
+
 

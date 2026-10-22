@@ -15,6 +15,8 @@ import { useCartStore } from "@/lib/pos/cart-store";
 import { formatBDT } from "@/lib/money";
 import { calculatePaymentBreakdown } from "@/lib/pos/pricing";
 import { PaymentMethod } from "@/types/database.types";
+import { outboxProcessor } from "@/lib/offline/outbox-processor";
+import { getNextOfflineInvoiceNumber } from "@/lib/offline/device";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -158,20 +160,83 @@ export function PaymentModal({
         client_reported_total: totalAmountPoisha,
       };
 
-      const res = await fetch("/api/pos/sale", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const completeOfflineSale = async () => {
+        const offlineInvoiceNumber = await getNextOfflineInvoiceNumber(tenantId);
+        const outboxEntry = await outboxProcessor.enqueueMutation({
+          tenantId,
+          storeId,
+          mutationType: "create_sale",
+          payload: {
+            ...payload,
+            locationId,
+            offlineInvoiceNumber,
+          },
+        });
 
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error || "Failed to process sale");
+        const offlineSale = {
+          id: outboxEntry.id,
+          invoice_number: offlineInvoiceNumber,
+          offline_invoice_number: offlineInvoiceNumber,
+          subtotal: totalAmountPoisha,
+          discount_amount: 0,
+          tax_amount: 0,
+          total_amount: totalAmountPoisha,
+          paid_amount: breakdown.totalPaidPoisha,
+          due_amount: breakdown.dueAmountPoisha,
+          change_amount: breakdown.changeAmountPoisha,
+          created_at: new Date().toISOString(),
+          sold_at: new Date().toISOString(),
+          is_offline: true,
+          items: items.map((i) => ({
+            id: `item_${i.variantId}`,
+            variant_id: i.variantId,
+            variant: { id: i.variantId, name: i.variantName, sku: i.sku, retail_price: i.unitPricePoisha },
+            quantity: i.quantity,
+            unit_price: i.unitPricePoisha,
+            subtotal: i.unitPricePoisha * i.quantity,
+            serial_numbers: i.selectedSerials,
+          })),
+          customer: selectedCustomer,
+          payments: payload.payments,
+        };
+
+        clearCart();
+        onSaleCompleted(offlineSale);
+        onClose();
+      };
+
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        await completeOfflineSale();
+        return;
       }
 
-      clearCart();
-      onSaleCompleted(json.sale);
-      onClose();
+      try {
+        const res = await fetch("/api/pos/sale", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const json = await res.json();
+        if (!res.ok) {
+          throw new Error(json.error || "Failed to process sale");
+        }
+
+        clearCart();
+        onSaleCompleted(json.sale);
+        onClose();
+      } catch (fetchErr: unknown) {
+        // If network disconnected mid-checkout, fall back to offline queue!
+        const isNetworkFailure =
+          (typeof navigator !== "undefined" && !navigator.onLine) ||
+          (fetchErr instanceof TypeError && fetchErr.message.includes("fetch"));
+
+        if (isNetworkFailure) {
+          await completeOfflineSale();
+        } else {
+          throw fetchErr;
+        }
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Payment processing error";
       setErrorMsg(msg);

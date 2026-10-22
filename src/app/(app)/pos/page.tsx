@@ -34,6 +34,9 @@ import { ReceiptModal } from "@/components/pos/receipt-modal";
 import { ReturnModal } from "@/components/pos/return-modal";
 import { VoidModal } from "@/components/pos/void-modal";
 import { PermissionGuard } from "@/components/ui/permission-guard";
+import { SyncStatusBadge } from "@/components/pos/sync-status-badge";
+import { PwaRegister } from "@/components/pwa/pwa-register";
+import { getOfflineDB } from "@/lib/offline/db";
 
 export default function PosTerminalPage() {
   const { activeTenant, currentRole } = useTenant();
@@ -135,9 +138,79 @@ export default function PosTerminalPage() {
             });
           });
           setCatalog(variantsList);
+
+          // Cache in Dexie for offline operation
+          try {
+            const db = getOfflineDB(tenantId);
+            const offlineVariants = variantsList.map((v) => ({
+              id: v.id,
+              productId: v.productId,
+              name: v.variantName,
+              sku: v.sku,
+              barcode: v.barcode,
+              retailPrice: v.retailPricePoisha,
+              costPrice: v.costPricePoisha,
+              taxRate: v.taxRateBasisPoints,
+              currentStock: v.currentStock,
+              version: 1,
+              updatedAt: new Date().toISOString(),
+            }));
+            const offlineProducts = productsRes.products.map((p: any) => ({
+              id: p.id,
+              tenantId,
+              categoryId: p.category_id,
+              brandId: p.brand_id,
+              name: p.name,
+              unit: p.unit,
+              hasVariants: p.has_variants,
+              hasSerials: p.has_serials,
+              warrantyMonths: p.warranty_months,
+              version: 1,
+              updatedAt: new Date().toISOString(),
+            }));
+            db.products.bulkPut(offlineProducts).catch(() => {});
+            db.variants.bulkPut(offlineVariants).catch(() => {});
+          } catch {}
         }
       })
-      .catch((err) => console.error("POS initial load error:", err))
+      .catch(async (err) => {
+        console.warn("Online catalog fetch failed, falling back to local Dexie cache:", err);
+        try {
+          const db = getOfflineDB(tenantId);
+          const localProducts = await db.products.toArray();
+          const localVariants = await db.variants.toArray();
+          const localCategories = await db.categories.toArray();
+
+          if (localCategories.length > 0) {
+            setCategories(localCategories.map((c) => ({ id: c.id, name: c.name })));
+          }
+
+          if (localVariants.length > 0) {
+            const productMap = new Map(localProducts.map((p) => [p.id, p]));
+            const variantsList: PosVariant[] = localVariants.map((v) => {
+              const p = productMap.get(v.productId);
+              return {
+                id: v.id,
+                productId: v.productId,
+                productName: p?.name || v.name,
+                variantName: v.name,
+                sku: v.sku,
+                barcode: v.barcode,
+                retailPricePoisha: v.retailPrice,
+                costPricePoisha: v.costPrice,
+                taxRateBasisPoints: v.taxRate,
+                hasSerials: p?.hasSerials || false,
+                categoryId: p?.categoryId || null,
+                warrantyMonths: p?.warrantyMonths || 0,
+                currentStock: v.currentStock,
+              };
+            });
+            setCatalog(variantsList);
+          }
+        } catch (dbErr) {
+          console.error("Dexie offline catalog read error:", dbErr);
+        }
+      })
       .finally(() => setIsLoadingCatalog(false));
   }, [tenantId]);
 
@@ -276,6 +349,8 @@ export default function PosTerminalPage() {
 
         {/* Global Action Buttons */}
         <div className="flex items-center gap-2">
+          <SyncStatusBadge tenantId={tenantId} storeId={storeId} />
+
           <button
             type="button"
             onClick={() => setIsReturnOpen(true)}
@@ -790,6 +865,8 @@ export default function PosTerminalPage() {
         onClose={() => setIsVoidOpen(false)}
         tenantId={tenantId}
       />
+
+      <PwaRegister />
     </div>
   );
 }

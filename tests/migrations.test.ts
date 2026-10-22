@@ -133,4 +133,17 @@ describe("Database Migrations & Seed Sanity Validation", () => {
     expect(migration6Content.includes("CREATE OR REPLACE FUNCTION fn_return_sale")).toBe(true);
     expect(migration6Content.includes("CREATE OR REPLACE FUNCTION fn_void_sale")).toBe(true);
   });
+
+  it("verifies Step 5 migration 7 defines offline sync, tenant_devices, offline_invoice_number, and negative stock support", () => {
+    const migration7Content = fs.readFileSync(
+      path.join(migrationsDir, "20261022000007_offline_sync.sql"),
+      "utf-8"
+    );
+
+    expect(migration7Content.includes("offline_invoice_number")).toBe(true);
+    expect(migration7Content.includes("tenant_devices")).toBe(true);
+    expect(migration7Content.includes("CREATE OR REPLACE FUNCTION fn_revoke_device")).toBe(true);
+    expect(migration7Content.includes("p_is_offline_sync")).toBe(true);
+    expect(migration7Content.includes("alert:negative_stock")).toBe(true);
+  });
 });
