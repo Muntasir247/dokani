@@ -1,0 +1,333 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Dokani POS SaaS Public REST API",
+    "description": "Public developer and ERP integration API for Dokani POS SaaS (Business Plan). Supports catalog management, POS sales, customer ledger, real-time inventory, and courier parcel dispatch.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Dokani Engineering",
+      "email": "support@dokani.app",
+      "url": "https://dokani.app"
+    }
+  },
+  "servers": [
+    {
+      "url": "/api/v1",
+      "description": "Current Environment API v1"
+    },
+    {
+      "url": "https://dokani.app/api/v1",
+      "description": "Production API v1"
+    }
+  ],
+  "security": [
+    {
+      "BearerAuth": []
+    },
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "paths": {
+    "/products": {
+      "get": {
+        "summary": "List products",
+        "description": "Paginated list of catalog products for the tenant.",
+        "operationId": "listProducts",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20, "maximum": 100 } },
+          { "name": "query", "in": "query", "schema": { "type": "string" }, "description": "Search by name, SKU, or barcode" },
+          { "name": "category_id", "in": "query", "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Products returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductListResponse"
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      },
+      "post": {
+        "summary": "Create product",
+        "description": "Add a new product to the catalog (subject to tenant plan limits).",
+        "operationId": "createProduct",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/sales": {
+      "get": {
+        "summary": "List sales invoices",
+        "operationId": "listSales",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "branch_id", "in": "query", "schema": { "type": "string", "format": "uuid" } },
+          { "name": "start_date", "in": "query", "schema": { "type": "string", "format": "date-time" } },
+          { "name": "end_date", "in": "query", "schema": { "type": "string", "format": "date-time" } }
+        ],
+        "responses": {
+          "200": { "description": "Sales returned successfully" }
+        }
+      },
+      "post": {
+        "summary": "Create sale",
+        "operationId": "createSale",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSaleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Sale created and stock movements recorded" }
+        }
+      }
+    },
+    "/customers": {
+      "get": {
+        "summary": "List customers",
+        "operationId": "listCustomers",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "query", "in": "query", "schema": { "type": "string" }, "description": "Search by name or phone" }
+        ],
+        "responses": {
+          "200": { "description": "Customers returned successfully" }
+        }
+      },
+      "post": {
+        "summary": "Create customer",
+        "operationId": "createCustomer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Customer profile created" }
+        }
+      }
+    },
+    "/inventory": {
+      "get": {
+        "summary": "Get inventory balances",
+        "operationId": "getInventory",
+        "parameters": [
+          { "name": "branch_id", "in": "query", "schema": { "type": "string", "format": "uuid" } },
+          { "name": "low_stock", "in": "query", "schema": { "type": "boolean" }, "description": "Filter items below low-stock threshold" }
+        ],
+        "responses": {
+          "200": { "description": "Stock snapshot and valuation returned" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "dk_live_..."
+      },
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      }
+    },
+    "schemas": {
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "sku": { "type": "string" },
+          "barcode": { "type": "string" },
+          "retail_price": { "type": "number" },
+          "cost_price": { "type": "number" },
+          "track_inventory": { "type": "boolean" },
+          "low_stock_threshold": { "type": "integer" }
+        }
+      },
+      "ProductListResponse": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } },
+          "pagination": { "$ref": "#/components/schemas/Pagination" }
+        }
+      },
+      "CreateProductRequest": {
+        "type": "object",
+        "required": ["name", "retail_price"],
+        "properties": {
+          "name": { "type": "string" },
+          "sku": { "type": "string" },
+          "barcode": { "type": "string" },
+          "retail_price": { "type": "number", "minimum": 0 },
+          "cost_price": { "type": "number", "minimum": 0 },
+          "category_id": { "type": "string", "format": "uuid" },
+          "track_inventory": { "type": "boolean", "default": true },
+          "low_stock_threshold": { "type": "integer", "default": 5 }
+        }
+      },
+      "CreateSaleRequest": {
+        "type": "object",
+        "required": ["branch_id", "items", "payments"],
+        "properties": {
+          "branch_id": { "type": "string", "format": "uuid" },
+          "customer_id": { "type": "string", "format": "uuid" },
+          "items": { "type": "array", "items": { "type": "object" } },
+          "payments": { "type": "array", "items": { "type": "object" } },
+          "discount_amount": { "type": "number", "default": 0 },
+          "tax_amount": { "type": "number", "default": 0 },
+          "notes": { "type": "string" }
+        }
+      },
+      "CreateCustomerRequest": {
+        "type": "object",
+        "required": ["name", "phone"],
+        "properties": {
+          "name": { "type": "string" },
+          "phone": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "address": { "type": "string" },
+          "price_tier": { "type": "string", "enum": ["retail", "wholesale", "custom"], "default": "retail" },
+          "credit_limit": { "type": "number", "default": 0 }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "integer" },
+          "limit": { "type": "integer" },
+          "total": { "type": "integer" },
+          "totalPages": { "type": "integer" },
+          "hasMore": { "type": "boolean" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" },
+          "message": { "type": "string" }
+        }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Authentication token missing, invalid, or revoked",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "API key lacks required scope or active Business plan",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "ValidationError": {
+        "description": "Payload failed schema validation",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {
+    "saleCreated": {
+      "post": {
+        "requestBody": {
+          "description": "Triggered whenever a sale is finalized and registered in Dokani",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string" },
+                  "event": { "type": "string", "example": "sale.created" },
+                  "createdAt": { "type": "string", "format": "date-time" },
+                  "tenantId": { "type": "string", "format": "uuid" },
+                  "data": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Webhook received successfully" }
+        }
+      }
+    },
+    "stockLow": {
+      "post": {
+        "requestBody": {
+          "description": "Triggered whenever product stock drops below low_stock_threshold",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string" },
+                  "event": { "type": "string", "example": "stock.low" },
+                  "createdAt": { "type": "string", "format": "date-time" },
+                  "tenantId": { "type": "string", "format": "uuid" },
+                  "data": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Webhook received successfully" }
+        }
+      }
+    }
+  }
+}

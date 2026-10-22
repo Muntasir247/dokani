@@ -34,6 +34,8 @@ export type Database = {
           updated_at: string;
           deleted_at: string | null;
           version: number;
+          deletion_scheduled_at: string | null;
+          retention_purge_after: string | null;
         };
         Insert: {
           id?: string;
@@ -45,6 +47,8 @@ export type Database = {
           updated_at?: string;
           deleted_at?: string | null;
           version?: number;
+          deletion_scheduled_at?: string | null;
+          retention_purge_after?: string | null;
         };
         Update: {
           id?: string;
@@ -56,6 +60,8 @@ export type Database = {
           updated_at?: string;
           deleted_at?: string | null;
           version?: number;
+          deletion_scheduled_at?: string | null;
+          retention_purge_after?: string | null;
         };
         Relationships: [];
       };
@@ -1743,6 +1749,234 @@ export type Database = {
         };
         Relationships: [];
       };
+      tenant_courier_configs: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          provider: "steadfast" | "pathao" | "custom";
+          api_key_encrypted: string;
+          secret_key_encrypted: string | null;
+          webhook_secret_encrypted: string | null;
+          is_active: boolean;
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          provider: "steadfast" | "pathao" | "custom";
+          api_key_encrypted: string;
+          secret_key_encrypted?: string | null;
+          webhook_secret_encrypted?: string | null;
+          is_active?: boolean;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          provider?: "steadfast" | "pathao" | "custom";
+          api_key_encrypted?: string;
+          secret_key_encrypted?: string | null;
+          webhook_secret_encrypted?: string | null;
+          is_active?: boolean;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      shipments: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          sale_id: string;
+          store_id: string;
+          courier_provider: string;
+          consignment_id: string;
+          tracking_code: string;
+          status: string;
+          recipient_name: string;
+          recipient_phone: string;
+          recipient_address: string;
+          cod_amount_poisha: number;
+          delivery_fee_poisha: number;
+          timeline: Json;
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          sale_id: string;
+          store_id: string;
+          courier_provider: string;
+          consignment_id: string;
+          tracking_code: string;
+          status?: string;
+          recipient_name: string;
+          recipient_phone: string;
+          recipient_address: string;
+          cod_amount_poisha?: number;
+          delivery_fee_poisha?: number;
+          timeline?: Json;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          sale_id?: string;
+          store_id?: string;
+          courier_provider?: string;
+          consignment_id?: string;
+          tracking_code?: string;
+          status?: string;
+          recipient_name?: string;
+          recipient_phone?: string;
+          recipient_address?: string;
+          cod_amount_poisha?: number;
+          delivery_fee_poisha?: number;
+          timeline?: Json;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      tenant_api_keys: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          name: string;
+          key_prefix: string;
+          key_hash: string;
+          scopes: string[];
+          rate_limit_per_minute: number;
+          last_used_at: string | null;
+          expires_at: string | null;
+          revoked_at: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          name: string;
+          key_prefix: string;
+          key_hash: string;
+          scopes?: string[];
+          rate_limit_per_minute?: number;
+          last_used_at?: string | null;
+          expires_at?: string | null;
+          revoked_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          name?: string;
+          key_prefix?: string;
+          key_hash?: string;
+          scopes?: string[];
+          rate_limit_per_minute?: number;
+          last_used_at?: string | null;
+          expires_at?: string | null;
+          revoked_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      tenant_webhook_endpoints: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          url: string;
+          secret: string;
+          events: string[];
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          url: string;
+          secret: string;
+          events?: string[];
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          url?: string;
+          secret?: string;
+          events?: string[];
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      webhook_deliveries: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          endpoint_id: string;
+          event: string;
+          payload: Json;
+          status: "pending" | "delivered" | "failed";
+          status_code: number | null;
+          attempts: number;
+          max_attempts: number;
+          last_error: string | null;
+          next_retry_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          endpoint_id: string;
+          event: string;
+          payload: Json;
+          status?: "pending" | "delivered" | "failed";
+          status_code?: number | null;
+          attempts?: number;
+          max_attempts?: number;
+          last_error?: string | null;
+          next_retry_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          endpoint_id?: string;
+          event?: string;
+          payload?: Json;
+          status?: "pending" | "delivered" | "failed";
+          status_code?: number | null;
+          attempts?: number;
+          max_attempts?: number;
+          last_error?: string | null;
+          next_retry_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       view_current_stock: {
@@ -2105,6 +2339,19 @@ export type Database = {
           p_session_id: string;
           p_counted_cash_poisha: number;
           p_notes?: string | null;
+        };
+        Returns: Json;
+      };
+      fn_schedule_tenant_deletion: {
+        Args: {
+          p_tenant_id: string;
+          p_retention_days?: number;
+        };
+        Returns: Json;
+      };
+      fn_cancel_tenant_deletion: {
+        Args: {
+          p_tenant_id: string;
         };
         Returns: Json;
       };

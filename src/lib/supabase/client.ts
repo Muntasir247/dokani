@@ -1,6 +1,7 @@
 import { createBrowserClient } from "@supabase/ssr";
 import { Database } from "@/types/database.types";
 import { getClientEnv } from "@/lib/config/env";
+import { createAdminClient } from "./admin";
 
 /**
  * Creates a singleton browser-side Supabase client for client components.
@@ -20,3 +21,8 @@ export function createClient() {
 
   return browserClient;
 }
+
+export function getServiceSupabase() {
+  return createAdminClient();
+}
+

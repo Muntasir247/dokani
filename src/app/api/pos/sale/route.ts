@@ -82,6 +82,12 @@ export async function POST(req: NextRequest) {
           }).catch((err) => console.warn("Failed to dispatch large discount alert:", err));
         });
       }
+
+      // Trigger outgoing webhook for subscribers
+      import("@/lib/webhooks/dispatcher").then(({ webhookDispatcher }) => {
+        webhookDispatcher.dispatchEvent(data.tenant_id, "sale.created", saleObj)
+          .catch((err) => console.warn("Failed to dispatch sale.created webhook:", err));
+      });
     }
 
     return NextResponse.json({ sale: saleResult }, { status: 201 });

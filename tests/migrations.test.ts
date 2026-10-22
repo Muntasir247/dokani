@@ -199,4 +199,22 @@ describe("Database Migrations & Seed Sanity Validation", () => {
     expect(migration10Content.includes("CREATE OR REPLACE FUNCTION fn_add_cash_drawer_tx")).toBe(true);
     expect(migration10Content.includes("CREATE OR REPLACE FUNCTION fn_close_cash_drawer")).toBe(true);
   });
+
+  it("verifies Step 9 migration 11 defines courier configs, shipments with duplicate guard, api keys, webhooks, and retention deletion", () => {
+    const migration11Content = fs.readFileSync(
+      path.join(migrationsDir, "20261022000011_integrations_security_and_webhooks.sql"),
+      "utf-8"
+    );
+
+    expect(migration11Content.includes("tenant_courier_configs")).toBe(true);
+    expect(migration11Content.includes("shipments")).toBe(true);
+    expect(migration11Content.includes("idx_unique_active_sale_shipment")).toBe(true);
+    expect(migration11Content.includes("tenant_api_keys")).toBe(true);
+    expect(migration11Content.includes("tenant_webhook_endpoints")).toBe(true);
+    expect(migration11Content.includes("webhook_deliveries")).toBe(true);
+    expect(migration11Content.includes("deletion_scheduled_at")).toBe(true);
+    expect(migration11Content.includes("retention_purge_after")).toBe(true);
+    expect(migration11Content.includes("CREATE OR REPLACE FUNCTION fn_schedule_tenant_deletion")).toBe(true);
+    expect(migration11Content.includes("CREATE OR REPLACE FUNCTION fn_cancel_tenant_deletion")).toBe(true);
+  });
 });
