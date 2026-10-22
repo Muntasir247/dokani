@@ -53,6 +53,7 @@ export async function GET() {
         latencyMs: dbLatencyMs,
         host: supabaseHost,
         hasServiceKey,
+        detectedKeys: Object.keys(process.env).filter((k) => k.includes("SUPABASE") || k.includes("URL")),
         ...(dbError ? { error: dbError } : {}),
       },
       memory: {
