@@ -9,7 +9,18 @@ export async function GET() {
   let dbLatencyMs = 0;
   let dbError: string | null = null;
 
+  let supabaseHost = "unknown";
+  let hasServiceKey = false;
+
   try {
+    const env = getServerEnv();
+    try {
+      supabaseHost = new URL(env.NEXT_PUBLIC_SUPABASE_URL).host;
+    } catch {
+      supabaseHost = "invalid-url";
+    }
+    hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("mock");
+
     const supabase = getServiceSupabase();
     const dbStart = Date.now();
     // Simple fast ping
@@ -39,6 +50,8 @@ export async function GET() {
       database: {
         status: dbStatus,
         latencyMs: dbLatencyMs,
+        host: supabaseHost,
+        hasServiceKey,
         ...(dbError ? { error: dbError } : {}),
       },
       memory: {
