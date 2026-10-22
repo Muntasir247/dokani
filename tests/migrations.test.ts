@@ -179,4 +179,24 @@ describe("Database Migrations & Seed Sanity Validation", () => {
     expect(migration9Content.includes("CREATE OR REPLACE FUNCTION fn_admin_extend_trial")).toBe(true);
     expect(migration9Content.includes("CREATE OR REPLACE FUNCTION fn_admin_set_plan")).toBe(true);
   });
+
+  it("verifies Step 8 migration 10 defines shifts, daily aggregates, valuation view, notifications, and analytics RPCs", () => {
+    const migration10Content = fs.readFileSync(
+      path.join(migrationsDir, "20261022000010_analytics_reports_and_shifts.sql"),
+      "utf-8"
+    );
+
+    expect(migration10Content.includes("cash_drawer_sessions")).toBe(true);
+    expect(migration10Content.includes("cash_drawer_transactions")).toBe(true);
+    expect(migration10Content.includes("daily_sales_aggregates")).toBe(true);
+    expect(migration10Content.includes("notifications")).toBe(true);
+    expect(migration10Content.includes("view_inventory_valuation")).toBe(true);
+    expect(migration10Content.includes("CREATE OR REPLACE FUNCTION fn_recompute_daily_sales_aggregate")).toBe(true);
+    expect(migration10Content.includes("CREATE OR REPLACE FUNCTION fn_get_dashboard_analytics")).toBe(true);
+    expect(migration10Content.includes("CREATE OR REPLACE FUNCTION fn_get_dead_stock")).toBe(true);
+    expect(migration10Content.includes("CREATE OR REPLACE FUNCTION fn_get_customer_aging")).toBe(true);
+    expect(migration10Content.includes("CREATE OR REPLACE FUNCTION fn_open_cash_drawer")).toBe(true);
+    expect(migration10Content.includes("CREATE OR REPLACE FUNCTION fn_add_cash_drawer_tx")).toBe(true);
+    expect(migration10Content.includes("CREATE OR REPLACE FUNCTION fn_close_cash_drawer")).toBe(true);
+  });
 });

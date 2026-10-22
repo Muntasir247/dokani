@@ -1563,6 +1563,186 @@ export type Database = {
         };
         Relationships: [];
       };
+      cash_drawer_sessions: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          store_id: string;
+          cashier_id: string;
+          opened_at: string;
+          closed_at: string | null;
+          opening_float_poisha: number;
+          closing_counted_poisha: number | null;
+          expected_cash_poisha: number | null;
+          cash_variance_poisha: number | null;
+          status: "open" | "closed";
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          store_id: string;
+          cashier_id: string;
+          opened_at?: string;
+          closed_at?: string | null;
+          opening_float_poisha?: number;
+          closing_counted_poisha?: number | null;
+          expected_cash_poisha?: number | null;
+          cash_variance_poisha?: number | null;
+          status?: "open" | "closed";
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          store_id?: string;
+          cashier_id?: string;
+          opened_at?: string;
+          closed_at?: string | null;
+          opening_float_poisha?: number;
+          closing_counted_poisha?: number | null;
+          expected_cash_poisha?: number | null;
+          cash_variance_poisha?: number | null;
+          status?: "open" | "closed";
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      cash_drawer_transactions: {
+        Row: {
+          id: string;
+          session_id: string;
+          tenant_id: string;
+          type: "cash_in" | "cash_out";
+          amount_poisha: number;
+          reason: string;
+          performed_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          session_id: string;
+          tenant_id: string;
+          type: "cash_in" | "cash_out";
+          amount_poisha: number;
+          reason: string;
+          performed_by: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          session_id?: string;
+          tenant_id?: string;
+          type?: "cash_in" | "cash_out";
+          amount_poisha?: number;
+          reason?: string;
+          performed_by?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      daily_sales_aggregates: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          store_id: string;
+          sale_date: string;
+          total_invoices: number;
+          total_revenue_poisha: number;
+          total_cost_poisha: number;
+          total_gross_profit_poisha: number;
+          total_discount_poisha: number;
+          total_tax_poisha: number;
+          total_paid_poisha: number;
+          total_due_poisha: number;
+          cash_paid_poisha: number;
+          bkash_paid_poisha: number;
+          nagad_paid_poisha: number;
+          card_paid_poisha: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          store_id: string;
+          sale_date: string;
+          total_invoices?: number;
+          total_revenue_poisha?: number;
+          total_cost_poisha?: number;
+          total_gross_profit_poisha?: number;
+          total_discount_poisha?: number;
+          total_tax_poisha?: number;
+          total_paid_poisha?: number;
+          total_due_poisha?: number;
+          cash_paid_poisha?: number;
+          bkash_paid_poisha?: number;
+          nagad_paid_poisha?: number;
+          card_paid_poisha?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          store_id?: string;
+          sale_date?: string;
+          total_invoices?: number;
+          total_revenue_poisha?: number;
+          total_cost_poisha?: number;
+          total_gross_profit_poisha?: number;
+          total_discount_poisha?: number;
+          total_tax_poisha?: number;
+          total_paid_poisha?: number;
+          total_due_poisha?: number;
+          cash_paid_poisha?: number;
+          bkash_paid_poisha?: number;
+          nagad_paid_poisha?: number;
+          card_paid_poisha?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      notifications: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          type: string;
+          title: string;
+          message: string;
+          data: Json | null;
+          is_read: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          type: string;
+          title: string;
+          message: string;
+          data?: Json | null;
+          is_read?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          type?: string;
+          title?: string;
+          message?: string;
+          data?: Json | null;
+          is_read?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       view_current_stock: {
@@ -1623,6 +1803,25 @@ export type Database = {
           total_sales_due: number;
           total_payments: number;
           current_due: number;
+        };
+        Relationships: [];
+      };
+      view_inventory_valuation: {
+        Row: {
+          tenant_id: string;
+          product_name: string;
+          variant_id: string;
+          sku: string;
+          barcode: string | null;
+          category_name: string;
+          brand_name: string;
+          current_stock: number;
+          unit_cost_poisha: number;
+          unit_retail_poisha: number;
+          total_cost_value_poisha: number;
+          total_retail_value_poisha: number;
+          potential_profit_poisha: number;
+          profit_margin_percentage: number;
         };
         Relationships: [];
       };
@@ -1854,6 +2053,58 @@ export type Database = {
           p_max_stores: number;
           p_max_products: number;
           p_max_staff: number;
+        };
+        Returns: Json;
+      };
+      fn_get_dashboard_analytics: {
+        Args: {
+          p_tenant_id: string;
+          p_store_id?: string | null;
+          p_target_date?: string;
+        };
+        Returns: Json;
+      };
+      fn_get_dead_stock: {
+        Args: {
+          p_tenant_id: string;
+          p_store_id?: string | null;
+          p_days_threshold?: number;
+        };
+        Returns: Json;
+      };
+      fn_get_customer_aging: {
+        Args: {
+          p_tenant_id: string;
+        };
+        Returns: Json;
+      };
+      fn_open_cash_drawer: {
+        Args: {
+          p_tenant_id: string;
+          p_store_id: string;
+          p_cashier_id: string;
+          p_opening_float_poisha: number;
+          p_notes?: string | null;
+        };
+        Returns: Json;
+      };
+      fn_add_cash_drawer_tx: {
+        Args: {
+          p_tenant_id: string;
+          p_session_id: string;
+          p_type: string;
+          p_amount_poisha: number;
+          p_reason: string;
+          p_performed_by: string;
+        };
+        Returns: Json;
+      };
+      fn_close_cash_drawer: {
+        Args: {
+          p_tenant_id: string;
+          p_session_id: string;
+          p_counted_cash_poisha: number;
+          p_notes?: string | null;
         };
         Returns: Json;
       };

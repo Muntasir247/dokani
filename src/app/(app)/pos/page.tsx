@@ -37,6 +37,7 @@ import { PermissionGuard } from "@/components/ui/permission-guard";
 import { SyncStatusBadge } from "@/components/pos/sync-status-badge";
 import { PwaRegister } from "@/components/pwa/pwa-register";
 import { getOfflineDB } from "@/lib/offline/db";
+import { CashDrawerModal } from "@/components/pos/cash-drawer-modal";
 
 export default function PosTerminalPage() {
   const { activeTenant, currentRole } = useTenant();
@@ -76,6 +77,7 @@ export default function PosTerminalPage() {
   const [isHeldCartsOpen, setIsHeldCartsOpen] = useState(false);
   const [isReturnOpen, setIsReturnOpen] = useState(false);
   const [isVoidOpen, setIsVoidOpen] = useState(false);
+  const [isShiftOpen, setIsShiftOpen] = useState(false);
   const [receiptSale, setReceiptSale] = useState<Record<string, unknown> | null>(null);
 
   // Serial selector state
@@ -370,6 +372,15 @@ export default function PosTerminalPage() {
               <span>Void Sale</span>
             </button>
           </PermissionGuard>
+
+          <button
+            type="button"
+            onClick={() => setIsShiftOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 transition"
+          >
+            <Boxes className="h-3.5 w-3.5 text-emerald-600" />
+            <span>Cash Shift</span>
+          </button>
 
           <button
             type="button"
@@ -864,6 +875,13 @@ export default function PosTerminalPage() {
         isOpen={isVoidOpen}
         onClose={() => setIsVoidOpen(false)}
         tenantId={tenantId}
+      />
+
+      <CashDrawerModal
+        isOpen={isShiftOpen}
+        onClose={() => setIsShiftOpen(false)}
+        tenantId={tenantId}
+        storeId={storeId}
       />
 
       <PwaRegister />

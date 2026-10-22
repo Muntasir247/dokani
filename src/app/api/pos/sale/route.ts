@@ -61,6 +61,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: rpcError.message }, { status: 400 });
     }
 
+    // Asynchronous Alert Triggers: Large Discount & Low Stock
+    const saleObj = saleResult as Record<string, unknown> | null;
+    if (saleObj) {
+      const discountPoisha = Number(saleObj.discount_amount || 0);
+      const totalPoisha = Number(saleObj.total_amount || 0);
+      const subtotalPoisha = Number(saleObj.subtotal || 0);
+      const discountPct = subtotalPoisha > 0 ? Math.round((discountPoisha / subtotalPoisha) * 100) : 0;
+
+      // Trigger large discount notification if >= 20% or >= 500 BDT (50,000 poisha)
+      if (discountPct >= 20 || discountPoisha >= 50000) {
+        import("@/lib/notifications/notifier").then(({ NotificationService }) => {
+          NotificationService.notifyLargeDiscount({
+            tenantId: data.tenant_id,
+            invoiceNumber: String(saleObj.invoice_number || "POS-SALE"),
+            discountAmountPoisha: discountPoisha,
+            discountPercentage: discountPct,
+            totalAmountPoisha: totalPoisha,
+            cashierName: user.email || "Cashier",
+          }).catch((err) => console.warn("Failed to dispatch large discount alert:", err));
+        });
+      }
+    }
+
     return NextResponse.json({ sale: saleResult }, { status: 201 });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal server error";
