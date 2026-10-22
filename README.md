@@ -20,7 +20,6 @@ Designed to thrive on unstable or disconnected internet connections, Dokani guar
 - [Technology Stack](#-technology-stack)
 - [Setup in Under 10 Minutes](#-setup-in-under-10-minutes)
 - [Engineering Challenges & How I Solved Them](#-engineering-challenges--how-i-solved-them-interview-guide)
-- [Portfolio Media & Screenshot Checklist](#-portfolio-media--screenshot-checklist)
 - [Documentation Directory](#-documentation-directory)
 
 ---
