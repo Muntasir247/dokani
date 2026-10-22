@@ -18,6 +18,7 @@ export type MovementType =
   | "transfer_out";
 export type PaymentMethod = "cash" | "bkash" | "nagad" | "card" | "due";
 export type SyncOp = "INSERT" | "UPDATE" | "DELETE";
+export type CustomerPriceTier = "retail" | "wholesale" | "custom";
 
 export type Database = {
   public: {
@@ -264,6 +265,19 @@ export type Database = {
           address: string | null;
           phone: string | null;
           is_main: boolean;
+          vat_bin_number: string | null;
+          receipt_footer: string | null;
+          invoice_prefix: string | null;
+          default_paper_size: "80mm" | "a4";
+          logo_url: string | null;
+          payment_terms: string | null;
+          bank_details: string | null;
+          tax_enabled: boolean;
+          default_tax_rate: number;
+          default_currency: string;
+          loyalty_enabled: boolean;
+          loyalty_earn_rate_poisha: number;
+          loyalty_redeem_rate_poisha: number;
           created_at: string;
           updated_at: string;
           created_by: string | null;
@@ -278,6 +292,19 @@ export type Database = {
           address?: string | null;
           phone?: string | null;
           is_main?: boolean;
+          vat_bin_number?: string | null;
+          receipt_footer?: string | null;
+          invoice_prefix?: string | null;
+          default_paper_size?: "80mm" | "a4";
+          logo_url?: string | null;
+          payment_terms?: string | null;
+          bank_details?: string | null;
+          tax_enabled?: boolean;
+          default_tax_rate?: number;
+          default_currency?: string;
+          loyalty_enabled?: boolean;
+          loyalty_earn_rate_poisha?: number;
+          loyalty_redeem_rate_poisha?: number;
           created_at?: string;
           updated_at?: string;
           created_by?: string | null;
@@ -292,6 +319,19 @@ export type Database = {
           address?: string | null;
           phone?: string | null;
           is_main?: boolean;
+          vat_bin_number?: string | null;
+          receipt_footer?: string | null;
+          invoice_prefix?: string | null;
+          default_paper_size?: "80mm" | "a4";
+          logo_url?: string | null;
+          payment_terms?: string | null;
+          bank_details?: string | null;
+          tax_enabled?: boolean;
+          default_tax_rate?: number;
+          default_currency?: string;
+          loyalty_enabled?: boolean;
+          loyalty_earn_rate_poisha?: number;
+          loyalty_redeem_rate_poisha?: number;
           created_at?: string;
           updated_at?: string;
           created_by?: string | null;
@@ -609,6 +649,10 @@ export type Database = {
           address: string | null;
           credit_limit: number;
           opening_balance: number;
+          price_tier: CustomerPriceTier;
+          loyalty_points: number;
+          tax_id: string | null;
+          company_name: string | null;
           created_at: string;
           updated_at: string;
           created_by: string | null;
@@ -624,6 +668,10 @@ export type Database = {
           address?: string | null;
           credit_limit?: number;
           opening_balance?: number;
+          price_tier?: CustomerPriceTier;
+          loyalty_points?: number;
+          tax_id?: string | null;
+          company_name?: string | null;
           created_at?: string;
           updated_at?: string;
           created_by?: string | null;
@@ -639,6 +687,10 @@ export type Database = {
           address?: string | null;
           credit_limit?: number;
           opening_balance?: number;
+          price_tier?: CustomerPriceTier;
+          loyalty_points?: number;
+          tax_id?: string | null;
+          company_name?: string | null;
           created_at?: string;
           updated_at?: string;
           created_by?: string | null;
@@ -807,6 +859,9 @@ export type Database = {
           paid_amount: number;
           due_amount: number;
           change_amount: number;
+          share_token: string;
+          points_earned: number;
+          points_redeemed: number;
           notes: string | null;
           status: "completed" | "voided" | "partially_returned" | "returned";
           voided_at: string | null;
@@ -836,6 +891,9 @@ export type Database = {
           paid_amount?: number;
           due_amount?: number;
           change_amount?: number;
+          share_token?: string;
+          points_earned?: number;
+          points_redeemed?: number;
           notes?: string | null;
           status?: "completed" | "voided" | "partially_returned" | "returned";
           voided_at?: string | null;
@@ -865,6 +923,9 @@ export type Database = {
           paid_amount?: number;
           due_amount?: number;
           change_amount?: number;
+          share_token?: string;
+          points_earned?: number;
+          points_redeemed?: number;
           notes?: string | null;
           status?: "completed" | "voided" | "partially_returned" | "returned";
           voided_at?: string | null;
@@ -1312,6 +1373,7 @@ export type Database = {
           id: string;
           tenant_id: string;
           customer_id: string;
+          sale_id: string | null;
           amount: number;
           payment_method: PaymentMethod;
           reference: string | null;
@@ -1324,6 +1386,7 @@ export type Database = {
           id?: string;
           tenant_id: string;
           customer_id: string;
+          sale_id?: string | null;
           amount: number;
           payment_method?: PaymentMethod;
           reference?: string | null;
@@ -1336,6 +1399,7 @@ export type Database = {
           id?: string;
           tenant_id?: string;
           customer_id?: string;
+          sale_id?: string | null;
           amount?: number;
           payment_method?: PaymentMethod;
           reference?: string | null;
@@ -1618,6 +1682,30 @@ export type Database = {
         };
         Returns: Json;
       };
+      fn_collect_due_payment: {
+        Args: {
+          p_tenant_id: string;
+          p_customer_id: string;
+          p_amount: number;
+          p_payment_method?: PaymentMethod;
+          p_sale_id?: string | null;
+          p_reference?: string | null;
+          p_notes?: string | null;
+        };
+        Returns: Json;
+      };
+      fn_lookup_warranty: {
+        Args: {
+          p_serial_number: string;
+        };
+        Returns: Json;
+      };
+      fn_get_public_invoice: {
+        Args: {
+          p_share_token: string;
+        };
+        Returns: Json;
+      };
     };
     Enums: {
       user_role: UserRole;
@@ -1626,6 +1714,7 @@ export type Database = {
       movement_type: MovementType;
       payment_method: PaymentMethod;
       sync_op: SyncOp;
+      customer_price_tier: CustomerPriceTier;
     };
     CompositeTypes: {
       [_ in never]: never;

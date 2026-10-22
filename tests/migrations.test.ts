@@ -146,4 +146,20 @@ describe("Database Migrations & Seed Sanity Validation", () => {
     expect(migration7Content.includes("p_is_offline_sync")).toBe(true);
     expect(migration7Content.includes("alert:negative_stock")).toBe(true);
   });
+
+  it("verifies Step 6 migration 8 defines store settings, customer tiers, dues collection RPC, and public invoice token", () => {
+    const migration8Content = fs.readFileSync(
+      path.join(migrationsDir, "20261022000008_receipts_dues_and_settings.sql"),
+      "utf-8"
+    );
+
+    expect(migration8Content.includes("vat_bin_number")).toBe(true);
+    expect(migration8Content.includes("default_paper_size")).toBe(true);
+    expect(migration8Content.includes("price_tier")).toBe(true);
+    expect(migration8Content.includes("share_token")).toBe(true);
+    expect(migration8Content.includes("CREATE OR REPLACE FUNCTION fn_collect_due_payment")).toBe(true);
+    expect(migration8Content.includes("CREATE OR REPLACE FUNCTION fn_lookup_warranty")).toBe(true);
+    expect(migration8Content.includes("CREATE OR REPLACE FUNCTION fn_get_public_invoice")).toBe(true);
+    expect(migration8Content.includes("sales_public_read")).toBe(true);
+  });
 });

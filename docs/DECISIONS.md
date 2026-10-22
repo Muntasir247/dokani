@@ -169,5 +169,42 @@ This document tracks major architectural decisions for **Dokani**, capturing the
   - *Rejecting oversold offline sales*: Corrupts bookkeeping by dropping sales where real cash and goods already changed hands.
   - *Server-assigned IDs for offline entities*: Impossible without network connection; client UUID v7 enables immutable identity from creation.
 
+---
+
+## ADR 011: Print-Optimized Dual Receipt Engine (80mm & A4 Mushak 6.3), Unguessable Public Invoices, Atomic Dues Ledger, and Customer Loyalty
+
+* **Status**: Accepted
+* **Date**: 2026-10-22
+* **Context**: Retail and wholesale stores in Bangladesh require both 80mm compact thermal receipts for POS counter sales and formal A4 tax invoices (NBR Mushak 6.3 compliant) for B2B wholesale buyers with payment terms and bank routing details. Customers also need digital receipts via WhatsApp/SMS deep links, public serial warranty verification without business margin leakage, and store owners require an atomic dues collection workflow that synchronizes invoice due amounts and overall customer account balances without double-counting.
+* **Decision**:
+  1. **Dual Print-Optimized Template Engine**:
+     - Standard 80mm thermal receipt formatted with `@page { size: 80mm auto; margin: 0; }`, high-contrast typography, split payment tender breakdown, change return, and custom shop footer.
+     - A4 B2B Tax Invoice matching Bangladesh NBR Mushak 6.3 standard: includes store VAT/BIN, buyer company & BIN/TIN, credit terms, bank wire routing details, serialized warranty badges, and authorized signatory blocks.
+     - Inline SVG QR codes generated entirely offline without external CDN dependencies, embedding public invoice URLs.
+     - ESC/POS binary command builder (`EscPosBuilder`) providing WebUSB and WebSerial thermal printer compatibility for direct hardware cutting and printing.
+  2. **Cryptographically Unguessable Public Invoice Access**:
+     - Each sale receives a 128-bit unguessable random token (`share_token text NOT NULL DEFAULT encode(gen_random_bytes(16), 'hex')`).
+     - Secure RPC `fn_get_public_invoice(p_share_token)` exposes only that specific invoice and sanitizes sensitive internal business metrics (cost price, margin, profit, supplier origin) to prevent data leaks.
+     - Deep link generators for WhatsApp (`wa.me/?text=...`) and SMS (`sms:...?body=...`).
+  3. **Public Serial Number Warranty Registry**:
+     - Customer serial/IMEI verification portal (`/warranty`) invoking `fn_lookup_warranty(p_serial_number)`.
+     - Validates active coverage against `product_serials.warranty_end` without exposing purchase cost, wholesale price, or supplier data.
+  4. **Strict Atomic Dues Accounting (Anti-Double-Counting Guard)**:
+     - `view_customer_balances` derives `current_due = opening_balance + SUM(sales.due_amount) - SUM(customer_payments WHERE sale_id IS NULL)`.
+     - When payment is allocated to a specific invoice (`sale_id`), reducing `sales.due_amount` automatically updates the customer due in lockstep.
+     - Atomic RPC `fn_collect_due_payment` settles invoice dues, inserts payment tender, updates audit logs, and returns the verified customer balance in a single database transaction.
+  5. **Configurable Customer Loyalty Points & Wholesale Price Tiers**:
+     - Store-configurable loyalty rules (`loyalty_earn_rate_poisha`, `loyalty_redeem_rate_poisha`).
+     - Customer price tiers (`retail`, `wholesale`, `custom`) supporting B2B pricing rules and credit limit enforcement.
+* **Why**:
+  - Delivers high-speed counter printing and enterprise-grade B2B wholesale tax invoices from a unified data model.
+  - Guarantees 100% mathematical precision in customer debt accounting.
+  - Protects merchant margins from public inspection while providing transparent digital receipts to buyers.
+* **Alternatives Rejected**:
+  - *Dynamic canvas image receipts*: Blurry on thermal paper, slow to render, and fails browser text search.
+  - *Sequential public invoice URLs (`/invoice/123`)*: Insecure; exposes total transaction volume and allows competitive scrapers to harvest customer lists.
+  - *Floating point loyalty point conversions*: Causes round-off errors and ledger drift.
+
+
 
 
