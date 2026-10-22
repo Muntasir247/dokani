@@ -227,4 +227,4 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 📄 License
 
-Dokani is licensed under the [MIT License](LICENSE). Developed with pride by [Muntasir Rahman](https://github.com/Muntasir247).
+Dokani is licensed under the [MIT License](LICENSE). Developed with pride by [Muntasir Hossain](https://github.com/Muntasir247).
